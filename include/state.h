@@ -9,6 +9,7 @@ typedef struct _State {
   struct _State * out2;
   Array * array;
   int flag;
+  int index;
 } State;
 
 typedef struct _StateFrag {

@@ -67,6 +67,7 @@ State * nfa_state_new(NFA * nfa, int c, State * out1, State * out2) {
   state->out1 = out1;
   state->out2 = out2;
   state->flag = 0;
+  state->index = array_length(nfa->array);
   array_pushback(nfa->array, state);
   state->array = nfa->array;
   return state;
