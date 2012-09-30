@@ -1,6 +1,17 @@
 #ifndef NFA_H
 #define NFA_H
 
+/*
+ *  include/nfa.c
+ *  
+ *  This file contains the interface of my nfa, it contains:
+ *
+ *    NState:         the interface of nfa state
+ *    NStateFrag      the interface of nfa state fragment (nfa frag)
+ *    NFA:            the interface of nfa
+ *
+ */  
+
 #include <vector>
 
 using namespace std;
@@ -32,9 +43,11 @@ class NFA {
   public:
     typedef void (* travel_func)(NState * state);
 
+    // create nfa from postfix expression
     static NFA* post2nfa(char * postfix);
     
     virtual ~NFA();
+    // traval states in the NFA
     void nfa_travel(travel_func func);
     void print_all();
   private:

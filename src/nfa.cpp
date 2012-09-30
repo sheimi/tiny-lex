@@ -92,7 +92,9 @@ NFA* NFA::post2nfa(char* postfix) {
     }
   }
   POP(sf1);
+  // the stack should be empty
   assert(nfrag_stack.empty()); 
+  // connect the first state to the nfa
   nfa->_start.out1 = sf1.start;
   return nfa;
 }
