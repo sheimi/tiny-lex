@@ -9,7 +9,6 @@
 
 #include "env.h"
 #include "error.h"
-#include "array.h"
-#include "state.h"
+#include "nfa.h"
 
 #endif

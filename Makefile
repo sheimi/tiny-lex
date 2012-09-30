@@ -1,32 +1,32 @@
-CC=gcc
+CC=g++
 LIB_DIR=lib
 INC_DIR=include
 SRC_DIR=src
 CFLAGS=-I$(INC_DIR) -Wall -c
-TARGET=$(LIB_DIR)/error.o $(LIB_DIR)/array.o\
-			 $(SRC_DIR)/mylex.o $(SRC_DIR)/state.o
+TARGET=$(LIB_DIR)/error.o \
+			 $(SRC_DIR)/mylex.o $(SRC_DIR)/nfa.o
+TARGET_OBJ=error.o \
+					 mylex.o nfa.o
 
 ifneq ($(DEBUG),)
 	CFLAGS += -g -DDEBUG
 else
 	CFLAGS += -O2
 endif
+
 all: clean mylex
 
-mylex: $(TARGET)
+mylex: $(TARGET_OBJ)
 	$(CC) $(TARGET) -o mylex
 
-mylex.o:$(SRC_DIR)/mylex.c
-	$(CC) $(CFLAGS) $< -o $(SRC_DIR)/mylex.o
+mylex.o:$(SRC_DIR)/mylex.cpp
+	$(CC) $< -o $(SRC_DIR)/mylex.o $(CFLAGS) 
 
-state.o:$(SRC_DIR)/state.c
-	$(CC) $(CFLAGS) $< -o $(SRC_DIR)/state.o
+nfa.o:$(SRC_DIR)/nfa.cpp
+	$(CC) $< -o $(SRC_DIR)/nfa.o $(CFLAGS) 
 
-error.o:$(LIB_DIR)/error.c
-	$(CC) $(CFLAGS) $< -o $(LIB_DIR)/error.o
-
-array.o:$(LIB_DIR)/array.c
-	$(CC) $(CFLAGS) $< -o $(LIB_DIR)/array.o
+error.o:$(LIB_DIR)/error.cpp
+	c++ $< -o $(LIB_DIR)/error.o $(CFLAGS) 
 
 clean:
 	rm -rf $(LIB_DIR)/*.o
