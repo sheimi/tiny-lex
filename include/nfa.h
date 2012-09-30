@@ -13,12 +13,16 @@
  */  
 
 #include <vector>
+#include <map>
+#include <set>
 
 using namespace std;
 
 struct NState {
   NState();
   NState(vector<NState*>& v, int c=0, NState* out1=NULL, NState* out2=NULL);
+
+  enum StateTag {LAMBDA=-1, END=0};
 
   int c;         // char to enter this state
   int flag;      // travel flag
@@ -39,23 +43,38 @@ struct NStateFrag {
   void connect_state(NState* state);
 };
 
+struct DState {
+  DState(){}
+  DState(set<int> i):identifier(i), is_end(false){}
+
+  set<int> identifier;
+  map<int, set<int> > next_states;
+  bool is_end;
+};
+
 class NFA {
   public:
     typedef void (* travel_func)(NState * state);
 
     // create nfa from postfix expression
     static NFA* post2nfa(char * postfix);
+    static set<int> get_lambda(NState* state);
+    set<int> get_lambda(set<int> states);
     
     virtual ~NFA();
     // traval states in the NFA
     void nfa_travel(travel_func func);
     void print_all();
+    void construct_DFA();
   private:
     NState _start;
     vector<NState*> _states;
+    vector<DState*> _dfa_states;
 
     void _nfa_travel(NState* state, travel_func func); 
+    //set<int> _get_lambda(NState* state);
 
 };
+
 
 #endif
