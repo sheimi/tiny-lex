@@ -57,14 +57,13 @@ struct DState {
 
 class NFA {
   public:
+    NFA(string reg);
+    virtual ~NFA();
     typedef void (* travel_func)(NState * state);
 
-    // create nfa from postfix expression
-    static NFA* post2nfa(string postfix);
     static set<int> get_lambda(NState* state);
     set<int> get_lambda(set<int> states);
     
-    virtual ~NFA();
     // traval states in the NFA
     void nfa_travel(travel_func func);
     void print_all();
@@ -74,6 +73,7 @@ class NFA {
     vector<NState*> _states;
 
     void _nfa_travel(NState* state, travel_func func); 
+    string _reg2post(string& reg);
     //set<int> _get_lambda(NState* state);
 
 };

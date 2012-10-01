@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main(int argc, char ** args) {
-  NFA * nfa = NFA::post2nfa("abb.*.a.a.");
+  NFA * nfa = new NFA("a(bb)+aa");
   //nfa->print_all();
   DFA * dfa = nfa->construct_DFA();
   cout << dfa->match("abbaa") << endl;

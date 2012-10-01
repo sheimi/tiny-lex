@@ -41,9 +41,10 @@ NFA::~NFA() {
   }
 }
 
-NFA* NFA::post2nfa(string postfix) {
-  NFA * nfa = new NFA();
-  vector<NState*>& states = nfa->_states;
+
+NFA::NFA(string regex) {
+  string postfix = _reg2post(regex);
+  vector<NState*>& states = _states;
   NStateFrag sf1, sf2;
 
   stack<NStateFrag> nfrag_stack;
@@ -98,11 +99,69 @@ NFA* NFA::post2nfa(string postfix) {
   // the stack should be empty
   assert(nfrag_stack.empty()); 
   // connect the first state to the nfa
-  nfa->_start.out1 = sf1.start;
+  _start.out1 = sf1.start;
   STATE_NEW(NState::END, NULL, NULL);
   sf1.connect_state(state);
-  return nfa;
 }
+
+string NFA::_reg2post(string& reg) {
+  stack<char> symbol_stack;
+  string reg2;
+  string::iterator it;
+  bool add = false;
+  bool first = true;
+  for (it = reg.begin(); it != reg.end(); it++) {
+    if (*it == '|') {
+      add = false;
+    } else if (add && !first && *it != ')' && *it != '*' && *it != '+') {
+      reg2.push_back('.');
+    }
+    reg2.push_back(*it);
+    if (!add)
+      add = true;
+    if (first && *it)
+      first = false;
+    if (*it == '(')
+      first = true;
+  }
+
+  #define POP_SYMBOL()\
+    if (symbol_stack.size() != 0\
+        && symbol_stack.top() != '(') {\
+      result.push_back(symbol_stack.top());\
+      symbol_stack.pop();\
+    }
+
+  string result;
+  for (it = reg2.begin(); it != reg2.end(); it++) {
+    switch(*it) {
+      default:
+        result.push_back(*it); 
+        POP_SYMBOL();
+        break;
+      case ')':
+        while (symbol_stack.top() != '(') {
+          result.push_back(symbol_stack.top());
+          symbol_stack.pop();
+        }
+        symbol_stack.pop();
+        break;
+      case '+':
+      case '*':
+        result.push_back(*it);
+        POP_SYMBOL();
+        break;
+      case '|':
+      case '(':
+      case '.':
+        symbol_stack.push(*it);
+        break;
+    }
+  }
+  assert(symbol_stack.empty());
+  return result;
+}
+
 
 // actrual recursive travel
 void NFA::_nfa_travel(NState* state, travel_func func) {
