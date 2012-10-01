@@ -54,14 +54,15 @@ NFA::NFA(string regex) {
   #define PUSH(p, s1, s2) \
     nfrag_stack.push(NStateFrag(p, s1, s2));
   NState* state;
-  #define STATE_NEW(c, out1, out2)\
+  NState* state1;
+  #define STATE_NEW(state, c, out1, out2)\
     state = new NState(states, c, out1, out2);
 
   string::iterator it;
   for (it = postfix.begin(); it != postfix.end(); it++) {
     switch (*it) {
       default:
-        STATE_NEW(*it, NULL, NULL);
+        STATE_NEW(state, *it, NULL, NULL);
         PUSH(state, &state->out1, &state->out2);
         break;
       case '.':
@@ -73,23 +74,26 @@ NFA::NFA(string regex) {
       case '|':
         POP(sf2);
         POP(sf1);
-        STATE_NEW(NState::LAMBDA, sf1.start, sf2.start);
-        PUSH(state, sf1.out1, sf2.out1);
+        STATE_NEW(state, NState::LAMBDA, sf1.start, sf2.start);
+        STATE_NEW(state1, NState::LAMBDA, NULL, NULL);
+        sf1.connect_state(state1);
+        sf2.connect_state(state1);
+        PUSH(state, &state1->out1, &state1->out2);
         break;
       case '?':
         POP(sf1);
-        STATE_NEW(NState::LAMBDA, sf1.start, NULL);
+        STATE_NEW(state, NState::LAMBDA, sf1.start, NULL);
         PUSH(state, sf1.out1, &state->out1);
         break;
       case '*':
         POP(sf1);
-        STATE_NEW(NState::LAMBDA, sf1.start, NULL);
+        STATE_NEW(state, NState::LAMBDA, sf1.start, NULL);
         sf1.connect_state(state);
         PUSH(state, &(state->out2), NULL);
         break;
       case '+':
         POP(sf1);
-        STATE_NEW(NState::LAMBDA, sf1.start, NULL);
+        STATE_NEW(state, NState::LAMBDA, sf1.start, NULL);
         sf1.connect_state(state);
         PUSH(sf1.start, &(state->out2), NULL);
         break;
@@ -100,7 +104,7 @@ NFA::NFA(string regex) {
   assert(nfrag_stack.empty()); 
   // connect the first state to the nfa
   _start.out1 = sf1.start;
-  STATE_NEW(NState::END, NULL, NULL);
+  STATE_NEW(state, NState::END, NULL, NULL);
   sf1.connect_state(state);
 }
 
@@ -111,14 +115,15 @@ string NFA::_reg2post(string& reg) {
   bool add = false;
   bool first = true;
   for (it = reg.begin(); it != reg.end(); it++) {
-    if (*it == '|') {
-      add = false;
-    } else if (add && !first && *it != ')' && *it != '*' && *it != '+') {
+    if (add && !first && *it != ')' && *it != '|'
+        && *it != '*' && *it != '+') {
       reg2.push_back('.');
     }
     reg2.push_back(*it);
     if (!add)
       add = true;
+    if (*it == '|')
+      add = false;
     if (first && *it)
       first = false;
     if (*it == '(')
@@ -158,6 +163,11 @@ string NFA::_reg2post(string& reg) {
         break;
     }
   }
+#ifdef DEBUG
+  cout << "================= SPLIT LINE ==============" <<endl;
+  cout << reg2 << endl;
+  cout << result << endl;
+#endif
   assert(symbol_stack.empty());
   return result;
 }
@@ -253,7 +263,8 @@ DFA* NFA::construct_DFA() {
       } else {
         is_end = true;
       }
-      assert(state->out1 == state->out2);
+      if (state->out1 != NULL && state->out2 != NULL)
+        assert(state->out1 == state->out2);
     }
     for(map<int, set<int> >::iterator it = next_states.begin();
         it != next_states.end(); it++) {
