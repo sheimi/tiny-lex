@@ -41,7 +41,7 @@ NFA::~NFA() {
   }
 }
 
-NFA* NFA::post2nfa(char* postfix) {
+NFA* NFA::post2nfa(string postfix) {
   NFA * nfa = new NFA();
   vector<NState*>& states = nfa->_states;
   NStateFrag sf1, sf2;
@@ -56,10 +56,11 @@ NFA* NFA::post2nfa(char* postfix) {
   #define STATE_NEW(c, out1, out2)\
     state = new NState(states, c, out1, out2);
 
-  for (char* p = postfix; *p != '\0'; p++) {
-    switch (*p) {
+  string::iterator it;
+  for (it = postfix.begin(); it != postfix.end(); it++) {
+    switch (*it) {
       default:
-        STATE_NEW(*p, NULL, NULL);
+        STATE_NEW(*it, NULL, NULL);
         PUSH(state, &state->out1, &state->out2);
         break;
       case '.':

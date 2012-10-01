@@ -15,6 +15,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <string>
 
 using namespace std;
 
@@ -59,7 +60,7 @@ class NFA {
     typedef void (* travel_func)(NState * state);
 
     // create nfa from postfix expression
-    static NFA* post2nfa(char * postfix);
+    static NFA* post2nfa(string postfix);
     static set<int> get_lambda(NState* state);
     set<int> get_lambda(set<int> states);
     
