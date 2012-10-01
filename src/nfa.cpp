@@ -1,4 +1,5 @@
 #include "mylex.h"
+#include "dfa.h"
 #include <stack>
 #include <iostream>
 #include <queue>
@@ -168,22 +169,14 @@ set<int> NFA::get_lambda(set<int> states) {
   return result;
 }
 
-void NFA::construct_DFA() {
+DFA* NFA::construct_DFA() {
   map<set<int>, DState*> states;
   queue<set<int> > squeue;
   NState* start = _start.out1;
   squeue.push(get_lambda(start));
   while(!squeue.empty()) {
-    cout << endl;
     set<int> s_set =squeue.front();
     squeue.pop();
-
-    // for debug
-    set<int>::iterator it;
-    for ( it=s_set.begin() ; it != s_set.end(); it++ )
-      cout << *it << " ";
-    cout << endl;
-    // for debug end
 
     DState* d_state = new DState(s_set);
     map<int, set<int> >& next_states = d_state->next_states;
@@ -209,9 +202,10 @@ void NFA::construct_DFA() {
         squeue.push((*it).second);
     }
   }
-  // for debug
-  cout << endl << endl << endl;
 
+#ifdef DEBUG
+  cout << endl << endl << endl;
+  cout << "================= SPLIT LINE ==============" <<endl;
   #define PRINT_SET(s)\
     cout << "<";\
     for(set<int>::iterator its = s.begin(); its != s.end(); its++) {\
@@ -231,5 +225,18 @@ void NFA::construct_DFA() {
     }
     cout << endl;
   }
+#endif
+
+
+  DFA* dfa = new DFA(states);
+
+  // free DStates [may use smart_ptr in the future
+  for(map<set<int>, DState*>::iterator it = states.begin();
+      it != states.end(); it++) {
+    DState* ds = (*it).second;
+    delete ds;
+  }
+
+  return dfa;
   
 }

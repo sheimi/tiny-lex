@@ -4,9 +4,9 @@ INC_DIR=include
 SRC_DIR=src
 CFLAGS=-I$(INC_DIR) -Wall -c
 TARGET=$(LIB_DIR)/error.o \
-			 $(SRC_DIR)/mylex.o $(SRC_DIR)/nfa.o
+			 $(SRC_DIR)/mylex.o $(SRC_DIR)/nfa.o $(SRC_DIR)/dfa.o
 TARGET_OBJ=error.o \
-					 mylex.o nfa.o
+					 mylex.o nfa.o dfa.o
 
 ifneq ($(DEBUG),)
 	CFLAGS += -g -DDEBUG
@@ -24,6 +24,9 @@ mylex.o:$(SRC_DIR)/mylex.cpp
 
 nfa.o:$(SRC_DIR)/nfa.cpp
 	$(CC) $< -o $(SRC_DIR)/nfa.o $(CFLAGS) 
+
+dfa.o:$(SRC_DIR)/dfa.cpp
+	$(CC) $< -o $(SRC_DIR)/dfa.o $(CFLAGS) 
 
 error.o:$(LIB_DIR)/error.cpp
 	c++ $< -o $(LIB_DIR)/error.o $(CFLAGS) 

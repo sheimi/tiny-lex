@@ -18,6 +18,8 @@
 
 using namespace std;
 
+class DFA;
+
 struct NState {
   NState();
   NState(vector<NState*>& v, int c=0, NState* out1=NULL, NState* out2=NULL);
@@ -65,11 +67,10 @@ class NFA {
     // traval states in the NFA
     void nfa_travel(travel_func func);
     void print_all();
-    void construct_DFA();
+    DFA* construct_DFA();
   private:
     NState _start;
     vector<NState*> _states;
-    vector<DState*> _dfa_states;
 
     void _nfa_travel(NState* state, travel_func func); 
     //set<int> _get_lambda(NState* state);
