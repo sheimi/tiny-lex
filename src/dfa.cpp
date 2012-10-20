@@ -12,6 +12,9 @@ DFA::DFA(map<set<int>, DState*>& states) {
       state = new DFAState();\
       state->identifier = _states.size();\
       state->is_end = old_state->is_end;\
+      state->is_first = old_state->is_first;\
+      if (state->is_first)\
+        _first = state->identifier;\
       _states.push_back(state);\
       id_map[old_state->identifier] = state->identifier;\
     } else {\
@@ -45,7 +48,7 @@ DFA::~DFA() {
 }
 
 bool DFA::match(string input) {
-  int id = 0;
+  int id = _first;
   string::iterator it;
   for (it = input.begin(); it != input.end(); it++) {
     DFAState* state = _states[id];
@@ -61,7 +64,8 @@ void DFA::print() {
   cout << "================= SPLIT LINE ==============" <<endl;
   vector<DFAState*>::iterator it_v;
   for (it_v = _states.begin(); it_v != _states.end(); it_v++) {
-    cout << (*it_v)->identifier << " " << (*it_v)->is_end << "\t\t";
+    cout << (*it_v)->identifier << " end?:" << (*it_v)->is_end << "\t\t";
+    cout << " first?:" << (*it_v)->is_first<< "\t\t";
     map<int, int>::iterator it_m;
     map<int, int>& m = (*it_v)->nexts;
     for (it_m = m.begin(); it_m != m.end(); it_m++) {
@@ -110,6 +114,9 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
   state->identifier = id;
   id_map[set_log[o_id]] = id;
   state->is_end = o_state->is_end;
+  state->is_first = o_state->is_first;
+  if (state->is_first)
+    _first = state->identifier;
   min_states.push_back(state);
 
   map<int, int>::iterator mi;

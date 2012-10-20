@@ -116,7 +116,7 @@ string NFA::_reg2post(string& reg) {
   bool first = true;
   for (it = reg.begin(); it != reg.end(); it++) {
     if (add && !first && *it != ')' && *it != '|'
-        && *it != '*' && *it != '+') {
+        && *it != '*' && *it != '+' && *it != '?') {
       reg2.push_back('.');
     }
     reg2.push_back(*it);
@@ -199,9 +199,10 @@ void NFA::nfa_travel(travel_func func) {
 
 // this is help function for print_all()
 void print_state(NState* state) {
-  cout << state->index << endl;
+  cout << state->index << " " << state->c << endl;
 
-  set<int> l = NFA::get_lambda(state);
+  set<int> l;
+  NFA::get_lambda(state, l);
   set<int>::iterator it;
   for ( it=l.begin() ; it != l.end(); it++ )
     cout << *it << " ";
@@ -218,41 +219,41 @@ void NFA::print_all() {
 }
 
 // get the lambda closure of a state
-set<int> NFA::get_lambda(NState* state) {
-  set<int> result;
+void NFA::get_lambda(NState* state, set<int>& result) {
+  if (result.find(state->index) != result.end())
+    return;
   result.insert(state->index);
   if (state->c == NState::LAMBDA) {
     if (state->out1 != NULL) {
-      set<int> r = get_lambda(state->out1);
-      result.insert(r.begin(), r.end());
+      get_lambda(state->out1, result);
     }
     if (state->out2 != state->out1 && state->out2 != NULL) {
-      set<int> r = get_lambda(state->out2);
-      result.insert(r.begin(), r.end());
+      get_lambda(state->out2, result);
     }
   }
-  return result;
 }
 
-set<int> NFA::get_lambda(set<int> states) {
-  set<int> result;
+void NFA::get_lambda(set<int> states, set<int>& result) {
   for(set<int>::iterator it = states.begin(); it != states.end(); it++) {
-    set<int> r = get_lambda(_states[*it]);
-      result.insert(r.begin(), r.end());
+    get_lambda(_states[*it], result);
   }
-  return result;
 }
 
 DFA* NFA::construct_DFA() {
   map<set<int>, DState*> states;
   queue<set<int> > squeue;
   NState* start = _start.out1;
-  squeue.push(get_lambda(start));
+  set<int> result;
+  get_lambda(start, result);
+  squeue.push(result);
+  bool first = true;
   while(!squeue.empty()) {
     set<int> s_set =squeue.front();
     squeue.pop();
 
     DState* d_state = new DState(s_set);
+    d_state->is_first = first;
+    first = false;
     map<int, set<int> >& next_states = d_state->next_states;
     bool& is_end = d_state->is_end;
     states[s_set] = d_state;
@@ -272,7 +273,9 @@ DFA* NFA::construct_DFA() {
     }
     for(map<int, set<int> >::iterator it = next_states.begin();
         it != next_states.end(); it++) {
-      (*it).second = get_lambda((*it).second);
+      set<int> tmp;
+      get_lambda((*it).second, tmp);
+      (*it).second = tmp;
       if (states.find((*it).second) == states.end())
         squeue.push((*it).second);
     }

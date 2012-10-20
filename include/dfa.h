@@ -14,6 +14,7 @@ struct DFAState {
   int identifier;
   map<int, int> nexts;
   bool is_end;
+  bool is_first;
 };
 
 class DFA {
@@ -26,6 +27,7 @@ class DFA {
     void print();
   private:
     vector<DFAState*> _states;
+    int _first;
 
     void _divide_by_end(int& set_iterator, int* set_log);
     void _divide_by_outkey(int& set_iterator, int* set_log);

@@ -53,6 +53,7 @@ struct DState {
   set<int> identifier;
   map<int, set<int> > next_states;
   bool is_end;
+  bool is_first;
 };
 
 class NFA {
@@ -61,8 +62,8 @@ class NFA {
     virtual ~NFA();
     typedef void (* travel_func)(NState * state);
 
-    static set<int> get_lambda(NState* state);
-    set<int> get_lambda(set<int> states);
+    static void get_lambda(NState* state, set<int>& result);
+    void get_lambda(set<int> states, set<int>& result);
     
     // traval states in the NFA
     void nfa_travel(travel_func func);
