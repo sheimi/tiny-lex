@@ -142,7 +142,11 @@ string NFA::_reg2post(string& reg) {
     switch(*it) {
       default:
         result.push_back(*it); 
-        POP_SYMBOL();
+        it++;
+        if (*it != '*') {
+          POP_SYMBOL();
+        }
+        it--;
         break;
       case ')':
         while (symbol_stack.top() != '(') {
