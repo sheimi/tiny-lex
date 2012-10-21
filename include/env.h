@@ -7,4 +7,6 @@
 #define str_nequal(a, b) (strcmp(a, b) != 0)
 #define strcase_nequal(a, b) (strcasecmp(a, b) != 0)
 
+#define foreach BOOST_FOREACH
+
 #endif

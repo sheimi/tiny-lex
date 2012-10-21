@@ -2,3 +2,4 @@ sample/
 *.o
 mylex
 *.swp
+js_version

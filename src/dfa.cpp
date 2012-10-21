@@ -1,12 +1,8 @@
-#include "dfa.h"
-#include "nfa.h"
+#include "mylex.h"
 #include <iostream>
 #include <queue>
 
 DFA::DFA(map<set<int>, DState*>& states) {
-  map<set<int>, DState*>::iterator it;
-  map<set<int>, int> id_map;
-
   #define GET_STATE_BY_ID(state, old_state)\
     if (id_map.find(old_state->identifier) == id_map.end()) {\
       state = new DFAState();\
@@ -21,16 +17,18 @@ DFA::DFA(map<set<int>, DState*>& states) {
       state = _states[id_map[old_state->identifier]];\
     }
 
-  for(it = states.begin(); it != states.end(); it++) {
-    DState* dstate = (*it).second;
+  typedef map<set<int>, DState*> map_t;
+  map<set<int>, int> id_map;
+
+  foreach(map_t::value_type& item, states) {
+    DState* dstate = item.second;
     DFAState* dfa_state;
     GET_STATE_BY_ID(dfa_state, dstate);
 
-    map<int, set<int> >::iterator it_next;
-    map<int, set<int> >& next_map = dstate->next_states;
-    for(it_next = next_map.begin(); it_next != next_map.end(); it_next++) {
-      const int convert_char = (*it_next).first;
-      const set<int>& next_id = (*it_next).second;
+    typedef map<int, set<int> > map_set_t;
+    foreach(map_set_t::value_type& item_ms, dstate->next_states) {
+      const int convert_char = item_ms.first;
+      const set<int>& next_id = item_ms.second;
       DFAState* next_dfa_state;
       GET_STATE_BY_ID(next_dfa_state, states[next_id]);
       dfa_state->nexts[convert_char] = next_dfa_state->identifier;
@@ -49,12 +47,11 @@ DFA::~DFA() {
 
 bool DFA::match(string input) {
   int id = _first;
-  string::iterator it;
-  for (it = input.begin(); it != input.end(); it++) {
+  foreach(char c, input) {
     DFAState* state = _states[id];
-    if (state->nexts.find(*it) == state->nexts.end())
+    if (state->nexts.find(c) == state->nexts.end())
       return false;
-    id = state->nexts[*it];
+    id = state->nexts[c];
   }
   return _states[id]->is_end;
 }
@@ -62,14 +59,13 @@ bool DFA::match(string input) {
 void DFA::print() {
   cout << endl << endl << endl;
   cout << "================= SPLIT LINE ==============" <<endl;
-  vector<DFAState*>::iterator it_v;
-  for (it_v = _states.begin(); it_v != _states.end(); it_v++) {
-    cout << (*it_v)->identifier << " end?:" << (*it_v)->is_end << "\t\t";
-    cout << " first?:" << (*it_v)->is_first<< "\t\t";
-    map<int, int>::iterator it_m;
-    map<int, int>& m = (*it_v)->nexts;
-    for (it_m = m.begin(); it_m != m.end(); it_m++) {
-      cout << (char)(*it_m).first << " => " << (*it_m).second << "\t";
+
+  typedef map<int, int> map_t;
+  foreach (DFAState* state, _states) {
+    cout << state->identifier << " end?:" << state->is_end << "\t\t";
+    cout << " first?:" << state->is_first<< "\t\t";
+    foreach (map_t::value_type item_m, state->nexts) {
+      cout << (char)item_m.first << " => " << item_m.second << "\t";
     }
     cout << endl;
   }
@@ -87,9 +83,8 @@ void DFA::minimize() {
 
   vector<DFAState*> min_states;
   map<int, int> id_map;
-  vector<DFAState*>::iterator vi;
-  for (vi = _states.begin(); vi != _states.end(); vi++) {
-    _construct_min_dfa(*vi, min_states, id_map, set_log);
+  foreach(DFAState* state, _states) {
+    _construct_min_dfa(state, min_states, id_map, set_log);
   }
 
   _release_states(_states);
@@ -119,10 +114,10 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
     _first = state->identifier;
   min_states.push_back(state);
 
-  map<int, int>::iterator mi;
-  for (mi = o_state->nexts.begin(); mi != o_state->nexts.end(); mi++) {
-    int next_key = (*mi).first;
-    DFAState* next = _states[(*mi).second];
+  typedef map<int, int> map_t;
+  foreach(map_t::value_type item_m, o_state->nexts) {
+    int next_key = item_m.first;
+    DFAState* next = _states[item_m.second];
     int next_value = _construct_min_dfa(next, min_states, id_map, set_log);
     state->nexts[next_key] = next_value;
   }
@@ -131,11 +126,10 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
 
 /* make the differ kind of state in different set: end or not end */
 void DFA::_divide_by_end(int& set_iterator, int* set_log) {
-  vector<DFAState*>::iterator it_v;
   set_iterator++;
-  for (it_v = _states.begin(); it_v != _states.end(); it_v++) {
-    int id = (*it_v)->identifier;
-    if ((*it_v)->is_end) {
+  foreach(DFAState* state, _states) {
+    int id = state->identifier;
+    if (state->is_end) {
       set_log[id] = set_iterator;
     }
   }
@@ -144,16 +138,15 @@ void DFA::_divide_by_end(int& set_iterator, int* set_log) {
 /* make state with different next states key in different set */
 void DFA::_divide_by_outkey(int& set_iterator, int* set_log) {
   map<set<int>, int> output_log;
-  vector<DFAState*>::iterator it_v;
-  for (it_v = _states.begin(); it_v != _states.end(); it_v++) {
-    int id = (*it_v)->identifier;
-    map<int, int>& output = (*it_v)->nexts;
+  foreach(DFAState* state, _states) {
+    int id = state->identifier;
+    map<int, int>& output = state->nexts;
 
     // get next states key set
     set<int> output_set;
-    map<int, int>::iterator it_m;
-    for (it_m = output.begin(); it_m != output.end(); it_m++) {
-      output_set.insert((*it_m).first);
+    typedef map<int, int> map_t;
+    foreach(map_t::value_type& item_m, output) {
+      output_set.insert(item_m.first);
     }
     // put previous set_identifier into the set
     output_set.insert(set_log[id]);
@@ -181,9 +174,9 @@ void DFA::_divide_by_next(int& set_iterator, int* set_log) {
       equal_sets[set_log[i]] = tmp;
     }
   }
-  map<int, set<int> >::iterator mi;
-  for (mi = equal_sets.begin(); mi != equal_sets.end(); mi++) {
-    _divide_by_next_inner(set_iterator, set_log, (*mi).second);
+  typedef map<int, set<int> > map_t;
+  foreach(map_t::value_type& item, equal_sets) {
+    _divide_by_next_inner(set_iterator, set_log, item.second);
   }
 }
 
@@ -197,45 +190,39 @@ void DFA::_divide_by_next_inner(int& set_iterator, int* set_log,
 
   map<map<int, int>, int> next_log;
   map<int, set<int> > next_log_set;
-  set<int>::iterator equal_set_i;
   // divider the set                                 
-  for (equal_set_i = equal_set.begin();
-       equal_set_i != equal_set.end();
-       equal_set_i++) {
-    DFAState* state = _states[*equal_set_i];
+  foreach(int item, equal_set) {
+    DFAState* state = _states[item];
+    typedef map<int, int> map_t;
     map<int, int> tmp_map;
-    map<int, int>& nexts = state->nexts;
-    map<int, int>::iterator it_m;
-    for (it_m = nexts.begin(); it_m != nexts.end(); it_m++) {
-      tmp_map[(*it_m).first] = set_log_old[(*it_m).second];
+    foreach(map_t::value_type& item_m, state->nexts) {
+      tmp_map[item_m.first] = set_log_old[item_m.second];
     }
     map<map<int, int>, int>::iterator result = next_log.find(tmp_map);
     if (result != next_log.end()) {
-      set_log[*equal_set_i] = (*result).second;
-      next_log_set[(*result).second].insert(*equal_set_i);
+      set_log[item] = (*result).second;
+      next_log_set[(*result).second].insert(item);
     } else {
       set_iterator++;
-      set_log[*equal_set_i] = set_iterator;
+      set_log[item] = set_iterator;
       next_log[tmp_map] = set_iterator;
       set<int> tmp_set;
-      tmp_set.insert(*equal_set_i);
+      tmp_set.insert(item);
       next_log_set[set_iterator] = tmp_set;
     }
   }
   if (next_log_set.size() <= 1)
     return;
-  map<int, set<int> >::iterator mi;
-  for (mi = next_log_set.begin(); mi != next_log_set.end(); mi++) {
-
-     _divide_by_next_inner(set_iterator, set_log, (*mi).second);
+  typedef map<int, set<int> > map_set_t;
+  foreach(map_set_t::value_type item_m, next_log_set) {
+    _divide_by_next_inner(set_iterator, set_log, item_m.second);
   }
   delete[] set_log_old;
 }
 
 void DFA::_release_states(vector<DFAState*>& states) {
-  vector<DFAState*>::iterator it_v;
-  for (it_v = states.begin(); it_v != states.end(); it_v++) {
-    delete (*it_v);
+  foreach(DFAState* state, states) {
+    delete state;
   }
   states.clear();
 }

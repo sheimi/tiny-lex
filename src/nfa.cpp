@@ -1,5 +1,4 @@
 #include "mylex.h"
-#include "dfa.h"
 #include <stack>
 #include <iostream>
 #include <queue>
@@ -34,10 +33,8 @@ void NStateFrag::connect_state(NState* state) {
 }
 
 NFA::~NFA() {
-  vector<NState*>& v = _states;
-  vector<NState*>::iterator it;
-  for (it=v.begin() ; it < v.end(); it++) {
-    delete *it;
+  foreach(NState* it, _states) {
+    delete it;
   }
 }
 
@@ -58,11 +55,10 @@ NFA::NFA(string regex) {
   #define STATE_NEW(state, c, out1, out2)\
     state = new NState(states, c, out1, out2);
 
-  string::iterator it;
-  for (it = postfix.begin(); it != postfix.end(); it++) {
-    switch (*it) {
+  foreach(char c, postfix) {
+    switch (c) {
       default:
-        STATE_NEW(state, *it, NULL, NULL);
+        STATE_NEW(state, c, NULL, NULL);
         PUSH(state, &state->out1, &state->out2);
         break;
       case '.':
@@ -111,22 +107,21 @@ NFA::NFA(string regex) {
 string NFA::_reg2post(string& reg) {
   stack<char> symbol_stack;
   string reg2;
-  string::iterator it;
   bool add = false;
   bool first = true;
-  for (it = reg.begin(); it != reg.end(); it++) {
-    if (add && !first && *it != ')' && *it != '|'
-        && *it != '*' && *it != '+' && *it != '?') {
+  foreach(char c, reg) {
+    if (add && !first && c != ')' && c != '|'
+        && c != '*' && c != '+' && c != '?') {
       reg2.push_back('.');
     }
-    reg2.push_back(*it);
+    reg2.push_back(c);
     if (!add)
       add = true;
-    if (*it == '|')
+    if (c == '|')
       add = false;
-    if (first && *it)
+    if (first && c)
       first = false;
-    if (*it == '(')
+    if (c == '(')
       first = true;
   }
 
@@ -138,35 +133,32 @@ string NFA::_reg2post(string& reg) {
     }
 
   string result;
-  for (it = reg2.begin(); it != reg2.end(); it++) {
-    switch(*it) {
+  foreach(char c, reg2) {
+    switch(c) {
       default:
-        result.push_back(*it); 
-        it++;
-        if (*it != '*') {
-          POP_SYMBOL();
-        }
-        it--;
+        result.push_back(c); 
         break;
       case ')':
+        POP_SYMBOL();
         while (symbol_stack.top() != '(') {
-          result.push_back(symbol_stack.top());
-          symbol_stack.pop();
+          POP_SYMBOL();
         }
         symbol_stack.pop();
         break;
       case '+':
       case '*':
-        result.push_back(*it);
+        result.push_back(c);
         POP_SYMBOL();
         break;
       case '|':
-      case '(':
       case '.':
-        symbol_stack.push(*it);
+        POP_SYMBOL();
+      case '(':
+        symbol_stack.push(c);
         break;
     }
   }
+  POP_SYMBOL();
 #ifdef DEBUG
   cout << "================= SPLIT LINE ==============" <<endl;
   cout << reg2 << endl;
@@ -190,9 +182,8 @@ void NFA::_nfa_travel(NState* state, travel_func func) {
 }
 
 void NFA::nfa_travel(travel_func func) {
-  vector<NState*>::iterator it;
-  for (it=_states.begin() ; it < _states.end(); it++) {
-    (*it)->flag = 0;
+  foreach(NState* state, _states) {
+    state->flag = 0;
   }
   _nfa_travel(_start.out1, func);
 }
@@ -203,9 +194,9 @@ void print_state(NState* state) {
 
   set<int> l;
   NFA::get_lambda(state, l);
-  set<int>::iterator it;
-  for ( it=l.begin() ; it != l.end(); it++ )
-    cout << *it << " ";
+  foreach(int item, l) {
+    cout << item << " ";
+  }
   cout << endl;
   if (state->out1 != NULL)
     cout << "out 1: " << state->out1->index << endl;
@@ -234,8 +225,8 @@ void NFA::get_lambda(NState* state, set<int>& result) {
 }
 
 void NFA::get_lambda(set<int> states, set<int>& result) {
-  for(set<int>::iterator it = states.begin(); it != states.end(); it++) {
-    get_lambda(_states[*it], result);
+  foreach(int item, states) {
+    get_lambda(_states[item], result);
   }
 }
 
@@ -257,8 +248,8 @@ DFA* NFA::construct_DFA() {
     map<int, set<int> >& next_states = d_state->next_states;
     bool& is_end = d_state->is_end;
     states[s_set] = d_state;
-    for(set<int>::iterator it = s_set.begin(); it != s_set.end(); it++) {
-      NState* state = _states[*it];
+    foreach(int item, s_set) {
+      NState* state = _states[item];
       if (state->c == NState::LAMBDA)
         continue;
       int convert_c = state->c;
@@ -271,13 +262,14 @@ DFA* NFA::construct_DFA() {
       if (state->out1 != NULL && state->out2 != NULL)
         assert(state->out1 == state->out2);
     }
-    for(map<int, set<int> >::iterator it = next_states.begin();
-        it != next_states.end(); it++) {
+
+    typedef map<int, set<int> > map_t;
+    foreach(map_t::value_type& item, next_states) {
       set<int> tmp;
-      get_lambda((*it).second, tmp);
-      (*it).second = tmp;
-      if (states.find((*it).second) == states.end())
-        squeue.push((*it).second);
+      get_lambda(item.second, tmp);
+      item.second = tmp;
+      if (states.find(item.second) == states.end())
+        squeue.push(item.second);
     }
   }
 
@@ -286,20 +278,20 @@ DFA* NFA::construct_DFA() {
   cout << "================= SPLIT LINE ==============" <<endl;
   #define PRINT_SET(s)\
     cout << "<";\
-    for(set<int>::iterator its = s.begin(); its != s.end(); its++) {\
-      cout << *its << ", ";\
+    foreach(int item_s, s) {\
+      cout << item_s << ", ";\
     }\
     cout << ">";\
 
-  for(map<set<int>, DState*>::iterator it = states.begin();
-      it != states.end(); it++) {
-    const set<int>& s = (*it).first;
-    cout << " end?: " << (*it).second->is_end << "    ";
+  typedef map<set<int>, DState*> map_t1;
+  typedef map<int, set<int> > map_t2;
+  foreach(map_t1::value_type& item1, states) {
+    const set<int>& s = item1.first;
+    cout << " end?: " << item1.second->is_end << "    ";
     PRINT_SET(s);
-    for(map<int, set<int> >::iterator itm = (*it).second->next_states.begin();
-        itm != (*it).second->next_states.end(); itm++) {
-      cout << "\t\t" << (char)(*itm).first << " => ";
-      PRINT_SET((*itm).second);
+    foreach(map_t2::value_type& item2, item1.second->next_states) {
+      cout << "\t\t" << (char)item2.first << " => ";
+      PRINT_SET(item2.second);
     }
     cout << endl;
   }
@@ -308,10 +300,11 @@ DFA* NFA::construct_DFA() {
 
   DFA* dfa = new DFA(states);
 
-  // free DStates [may use smart_ptr in the future
-  for(map<set<int>, DState*>::iterator it = states.begin();
-      it != states.end(); it++) {
-    DState* ds = (*it).second;
+  // free DStates may use smart_ptr in the future
+  // TODO
+  typedef map<set<int>, DState*> map_t;
+  foreach (map_t::value_type& item, states) {
+    DState* ds = item.second;
     delete ds;
   }
 
