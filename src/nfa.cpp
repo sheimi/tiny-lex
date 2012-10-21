@@ -299,7 +299,10 @@ DFA* NFA::construct_DFA() {
         next_set.insert(state->out1->index);
       } else {
         d_state->is_end = true;
-        d_state->end_id = state->end_id;
+        // smaller end_id preferred
+        if (d_state->end_id == -1 || d_state->end_id > state->end_id) {
+          d_state->end_id = state->end_id;
+        }
       }
       if (state->out1 != NULL && state->out2 != NULL)
         assert(state->out1 == state->out2);

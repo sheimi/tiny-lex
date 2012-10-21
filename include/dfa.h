@@ -23,9 +23,9 @@ class DFA {
     DFA(map<set<int>, DState*>& states);
     virtual ~DFA();
 
-    bool match(string input);
+    int match(string input);
     void minimize();
-    void print();
+    void print(vector<DFAState*>&);
   private:
     vector<DFAState*> _states;
     int _first;

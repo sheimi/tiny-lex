@@ -20,6 +20,7 @@ int main(int argc, char ** args) {
   delete dfa;
   */
 
+  /*
   NFA* nfa1 = new NFA("a*", 1);
   //nfa1->print_all();
   //cout << "--------------------------" << endl;
@@ -33,11 +34,25 @@ int main(int argc, char ** args) {
   v.push_back(nfa3);
   NFA* nfa = NFA::connect_NFA(v);
   nfa->print_all();
-  nfa->construct_DFA();
+  DFA* dfa = nfa->construct_DFA();
+  dfa->minimize();
   NFA* nf2 = new NFA("(a*)|(a|b)|a");
   nf2->construct_DFA();
   delete nfa;
   delete nfa2;
   delete nfa1;
+  */
+  NFA* nfa1 = new NFA("a|bc", 1);
+  NFA* nfa2 = new NFA("ab|c", 2);
+  vector<NFA*> v;
+  v.push_back(nfa1);
+  v.push_back(nfa2);
+  NFA* nfa = NFA::connect_NFA(v);
+  DFA* dfa = nfa->construct_DFA();
+  dfa->minimize();
+  cout << dfa->match("ab") << endl;
+  delete nfa1;
+  delete nfa2;
+  delete nfa;
   return 0;
 }

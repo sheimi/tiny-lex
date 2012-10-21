@@ -37,7 +37,7 @@ DFA::DFA(map<set<int>, DState*>& states) {
   }
 
 #ifdef DEBUG
-  print();
+  print(_states);
 #endif
 
 }
@@ -46,7 +46,7 @@ DFA::~DFA() {
   _release_states(_states);
 }
 
-bool DFA::match(string input) {
+int DFA::match(string input) {
   int id = _first;
   foreach(char c, input) {
     DFAState* state = _states[id];
@@ -54,15 +54,15 @@ bool DFA::match(string input) {
       return false;
     id = state->nexts[c];
   }
-  return _states[id]->is_end;
+  return _states[id]->end_id;
 }
 
-void DFA::print() {
+void DFA::print(vector<DFAState*>& states) {
   cout << endl << endl << endl;
   cout << "================= SPLIT LINE ==============" <<endl;
 
   typedef map<int, int> map_t;
-  foreach (DFAState* state, _states) {
+  foreach (DFAState* state, states) {
     cout << state->identifier << " end?:" << state->is_end << "\t";
     cout << state->identifier << " end_id:" << state->end_id << "\t";
     cout << " first?:" << state->is_first<< "\t";
@@ -94,7 +94,7 @@ void DFA::minimize() {
   copy(min_states.begin(), min_states.end(), _states.begin());
  
 #ifdef DEBUG
-  print();
+  print(_states);
 #endif
 
   delete[] set_log;
@@ -104,8 +104,13 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
                            map<int, int>& id_map, int* set_log) {
   int o_id = o_state->identifier;
   map<int, int>::iterator result = id_map.find(set_log[o_id]);
-  if (result != id_map.end())
+  // TODO to be verified
+  if (result != id_map.end()) {
+    DFAState* tmp = min_states[(*result).second];
+    if (o_state->end_id < tmp->end_id)
+      tmp->end_id = o_state->end_id;
     return (*result).second;
+  }
   int id = min_states.size();
   DFAState* state = new DFAState();
   state->identifier = id;
@@ -152,6 +157,9 @@ void DFA::_divide_by_outkey(int& set_iterator, int* set_log) {
       output_set.insert(item_m.first);
     }
     // put previous set_identifier into the set
+    //if (output_set.empty() && state->is_end)
+    if (state->is_end)
+      output_set.insert(state->end_id);
     output_set.insert(set_log[id]);
     map<set<int>, int>::iterator result = output_log.find(output_set);
     if (result != output_log.end()) {
