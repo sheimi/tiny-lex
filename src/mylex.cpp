@@ -3,6 +3,7 @@
 #include <iostream>
 
 int main(int argc, char ** args) {
+  /*
   //NFA * nfa = new NFA("(((ab*)(a|b*))*|ab*)*(a|b)?");
   NFA * nfa = new NFA("(((ab*)(a|b*))*|(ab*))*");
   //NFA * nfa = new NFA("(a|b*)*");
@@ -17,5 +18,26 @@ int main(int argc, char ** args) {
   cout << dfa->match("abbcdadefga") << endl;
   delete nfa;
   delete dfa;
+  */
+
+  NFA* nfa1 = new NFA("a*", 1);
+  //nfa1->print_all();
+  //cout << "--------------------------" << endl;
+  NFA* nfa2 = new NFA("a|b", 2);
+  //nfa2->print_all();
+  //cout << "--------------------------" << endl;
+  NFA* nfa3 = new NFA("a", 3);
+  vector<NFA*> v;
+  v.push_back(nfa1);
+  v.push_back(nfa2);
+  v.push_back(nfa3);
+  NFA* nfa = NFA::connect_NFA(v);
+  nfa->print_all();
+  nfa->construct_DFA();
+  NFA* nf2 = new NFA("(a*)|(a|b)|a");
+  nf2->construct_DFA();
+  delete nfa;
+  delete nfa2;
+  delete nfa1;
   return 0;
 }

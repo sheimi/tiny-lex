@@ -15,6 +15,7 @@ struct DFAState {
   map<int, int> nexts;
   bool is_end;
   bool is_first;
+  int end_id;
 };
 
 class DFA {

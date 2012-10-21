@@ -9,6 +9,7 @@ DFA::DFA(map<set<int>, DState*>& states) {
       state->identifier = _states.size();\
       state->is_end = old_state->is_end;\
       state->is_first = old_state->is_first;\
+      state->end_id = old_state->end_id;\
       if (state->is_first)\
         _first = state->identifier;\
       _states.push_back(state);\
@@ -62,8 +63,9 @@ void DFA::print() {
 
   typedef map<int, int> map_t;
   foreach (DFAState* state, _states) {
-    cout << state->identifier << " end?:" << state->is_end << "\t\t";
-    cout << " first?:" << state->is_first<< "\t\t";
+    cout << state->identifier << " end?:" << state->is_end << "\t";
+    cout << state->identifier << " end_id:" << state->end_id << "\t";
+    cout << " first?:" << state->is_first<< "\t";
     foreach (map_t::value_type item_m, state->nexts) {
       cout << (char)item_m.first << " => " << item_m.second << "\t";
     }
@@ -110,6 +112,7 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
   id_map[set_log[o_id]] = id;
   state->is_end = o_state->is_end;
   state->is_first = o_state->is_first;
+  state->end_id = o_state->end_id;
   if (state->is_first)
     _first = state->identifier;
   min_states.push_back(state);

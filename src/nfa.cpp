@@ -4,15 +4,18 @@
 #include <queue>
 using namespace std;
 
+
 /*
 * Functions for NState
 */
-NState::NState(){}
-NState::NState(vector<NState*>& v, int c, NState* out1, NState* out2)
-  : c(c), out1(out1), out2(out2), out_num(0){
+NState::NState():end_id(-1){}
+NState::NState(vector<NState*>& v, int c, NState* out1,
+               NState* out2, int end_id)
+  : c(c), out1(out1), out2(out2), out_num(0), end_id(end_id){
   index = v.size();
   v.push_back(this);
 }
+NState::~NState() {}
 
 
 /*
@@ -38,8 +41,9 @@ NFA::~NFA() {
   }
 }
 
+NFA::NFA() {}
 
-NFA::NFA(string regex) {
+NFA::NFA(string regex, int end_id) {
   string postfix = _reg2post(regex);
   vector<NState*>& states = _states;
   NStateFrag sf1, sf2;
@@ -101,7 +105,47 @@ NFA::NFA(string regex) {
   // connect the first state to the nfa
   _start.out1 = sf1.start;
   STATE_NEW(state, NState::END, NULL, NULL);
+  state->end_id = end_id;
   sf1.connect_state(state);
+}
+
+void NFA::_set_flag(int flag) {
+  foreach(NState* state, _states) {
+    state->flag = flag;
+  }
+}
+
+NFA* NFA::connect_NFA(NFA* nfa1, NFA* nfa2) {
+  NFA* nfa = new NFA();
+  vector<NState*>& states = nfa->_states;
+  nfa1->_set_flag(-1);
+  nfa2->_set_flag(-1);
+  NState* state = new NState(states, NState::LAMBDA, NULL, NULL);
+  state->out1 = _connect_NFA_inner(states, nfa1->_start.out1);
+  state->out2 = _connect_NFA_inner(states, nfa2->_start.out1);
+  nfa->_start.out1 = state;
+  return nfa;
+}
+
+NState* NFA::_connect_NFA_inner(vector<NState*>& states, NState* o_state) {
+  if (o_state->flag != -1)
+    return states[o_state->flag];
+  NState* state = new NState(states, o_state->c, NULL, NULL, o_state->end_id);
+  o_state->flag = state->index;
+  if (o_state->out1 != NULL) {
+    state->out1 = _connect_NFA_inner(states, o_state->out1);
+  }
+  if (o_state->out2 != NULL) {
+    state->out2 = _connect_NFA_inner(states, o_state->out2);
+  }
+  return state;
+}
+NFA* NFA::connect_NFA(vector<NFA*>& nfas) {
+  NFA* nfa = NULL;
+  foreach(NFA* n, nfas) {
+    nfa = nfa == NULL ? n : connect_NFA(nfa, n);
+  }
+  return nfa;
 }
 
 string NFA::_reg2post(string& reg) {
@@ -182,15 +226,13 @@ void NFA::_nfa_travel(NState* state, travel_func func) {
 }
 
 void NFA::nfa_travel(travel_func func) {
-  foreach(NState* state, _states) {
-    state->flag = 0;
-  }
+  _set_flag(0);
   _nfa_travel(_start.out1, func);
 }
 
 // this is help function for print_all()
 void print_state(NState* state) {
-  cout << state->index << " " << state->c << endl;
+  cout << state->index << " " << state->c << " " << state->end_id << endl;
 
   set<int> l;
   NFA::get_lambda(state, l);
@@ -246,7 +288,6 @@ DFA* NFA::construct_DFA() {
     d_state->is_first = first;
     first = false;
     map<int, set<int> >& next_states = d_state->next_states;
-    bool& is_end = d_state->is_end;
     states[s_set] = d_state;
     foreach(int item, s_set) {
       NState* state = _states[item];
@@ -257,7 +298,8 @@ DFA* NFA::construct_DFA() {
         set<int>& next_set = next_states[convert_c];
         next_set.insert(state->out1->index);
       } else {
-        is_end = true;
+        d_state->is_end = true;
+        d_state->end_id = state->end_id;
       }
       if (state->out1 != NULL && state->out2 != NULL)
         assert(state->out1 == state->out2);
@@ -288,6 +330,7 @@ DFA* NFA::construct_DFA() {
   foreach(map_t1::value_type& item1, states) {
     const set<int>& s = item1.first;
     cout << " end?: " << item1.second->is_end << "    ";
+    cout << " end_id: " << item1.second->end_id << "    ";
     PRINT_SET(s);
     foreach(map_t2::value_type& item2, item1.second->next_states) {
       cout << "\t\t" << (char)item2.first << " => ";
