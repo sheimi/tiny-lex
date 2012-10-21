@@ -1,5 +1,6 @@
 sample/
-*.o
+js_version/
+test
 mylex
+*.o
 *.swp
-js_version

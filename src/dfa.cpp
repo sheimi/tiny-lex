@@ -237,3 +237,79 @@ void DFA::_release_states(vector<DFAState*>& states) {
   }
   states.clear();
 }
+
+void DFA::to_c(ostream& os) {
+  _c_header(os);
+  foreach(DFAState* state, _states) {
+    _c_state_change(os, state);
+  }
+  _c_footer(os);
+}
+
+void DFA::_c_header(ostream& os) {
+  cout << "void shm_parse(FILE* shm_file) {" << endl;
+  cout << "int shm_state;" << endl;
+  cout << "int shm_i;" << endl;
+  cout << "char shm_c;" << endl;
+  cout << "char buffer[1024];" << endl;
+  cout << "char buffer_index;" << endl;
+  _c_state_reset(os);
+  cout << "while (EOF != (shm_c = fgetc(shm_file))) {" << endl;
+  cout << "  buffer[buffer_index] = shm_c;" << endl;
+  cout << "  buffer_index++; buffer[buffer_index]='\\0';" << endl;
+  cout << "  switch(shm_state) {" << endl;
+}
+
+void DFA::_c_footer(ostream& os) {
+  cout << "  }" << endl;
+  cout << "}" << endl;
+  cout << "}" << endl;
+}
+
+void DFA::_c_state_reset(ostream& os) {
+  cout << "buffer[0] = '\\0';" << endl;
+  cout << "buffer_index = 0;" << endl;
+  cout << "shm_state = " << _first << ";" << endl;
+}
+
+void DFA::_c_state_end(ostream& os, int end_point) {
+  cout << "end_handler_" << end_point << "(buffer);" << endl;
+}
+
+void DFA::_c_state_change(ostream& os, DFAState* state) {
+  cout << "case " << state->identifier << ":" << endl;
+  cout << "  switch(shm_c) {" << endl;
+  typedef map<int, int> map_t;
+  foreach (map_t::value_type item, state->nexts) {
+    cout << "    case '" << (char)item.first << "':" << endl;
+    cout << "      shm_state = " << item.second << ";" << endl;
+    cout << "    break;" << endl;
+  }
+  cout   << "    default:" << endl;
+  if (state->is_end) {
+    _c_state_end(os, state->end_id);
+    _c_state_reset(os);
+  } else {
+    cout << "      fprintf(stderr, \"Parse Error\");" << endl;
+    cout << "      exit(1);" << endl;
+    cout << "      break;" << endl;
+  }
+    cout << "    }" << endl;
+  cout   << "  break;" << endl;
+}
+
+void DFA::c_include(ostream& os) {
+  cout << "#include <stdio.h>" << endl;
+  cout << "#include <stdlib.h>" << endl;
+  cout << "#include <string.h>" << endl;
+
+}
+
+void DFA::c_main(ostream& os) {
+  cout << "int main(int argc, char** argv) {" << endl;
+  cout << "  FILE* infile; "<< endl;
+  cout << "  infile = fopen(argv[1], \"r\");" << endl;
+  cout << "  shm_parse(infile);" << endl;
+  cout << "  fclose(infile);" << endl;
+  cout << "}" << endl;
+}

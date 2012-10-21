@@ -11,7 +11,11 @@
 #include "error.h"
 #include "nfa.h"
 #include "dfa.h"
+#include "file_parser.h"
 
+#include <string>
+#include <iostream>
+#include <fstream>
 #include <boost/foreach.hpp>
 
 #endif

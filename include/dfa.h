@@ -26,6 +26,9 @@ class DFA {
     int match(string input);
     void minimize();
     void print(vector<DFAState*>&);
+    void c_include(ostream& os);
+    void c_main(ostream& os);
+    void to_c(ostream& os);
   private:
     vector<DFAState*> _states;
     int _first;
@@ -37,6 +40,12 @@ class DFA {
     int _construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
                           map<int, int>& id_map, int* set_log);
     void _release_states(vector<DFAState*>& states);
+
+    void _c_header(ostream& os);
+    void _c_footer(ostream& os);
+    void _c_state_change(ostream& os, DFAState* state);
+    void _c_state_reset(ostream& os);
+    void _c_state_end(ostream& os, int end_point);
 };
 
 #endif

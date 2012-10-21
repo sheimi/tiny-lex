@@ -3,6 +3,10 @@
 #include <iostream>
 
 int main(int argc, char ** args) {
+
+  string filename = args[1];
+  FileParser fp(filename);
+
   /*
   //NFA * nfa = new NFA("(((ab*)(a|b*))*|ab*)*(a|b)?");
   NFA * nfa = new NFA("(((ab*)(a|b*))*|(ab*))*");
@@ -42,6 +46,7 @@ int main(int argc, char ** args) {
   delete nfa2;
   delete nfa1;
   */
+  /*
   NFA* nfa1 = new NFA("a|bc", 1);
   NFA* nfa2 = new NFA("ab|c", 2);
   vector<NFA*> v;
@@ -54,5 +59,6 @@ int main(int argc, char ** args) {
   delete nfa1;
   delete nfa2;
   delete nfa;
+  */
   return 0;
 }
