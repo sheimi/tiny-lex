@@ -16,6 +16,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <boost/foreach.hpp>
 
 #endif

@@ -8,8 +8,11 @@ void RegexEntry::to_c(ostream& os) {
 
 FileParser::FileParser(string& filename) {
   ifstream ifs(filename.c_str());
+  char buffer[32];
+  ifs.getline(buffer, 32);
+  stringstream ss(buffer);
   int N;
-  ifs >> N;
+  ss >> N;
   for (int i = 0; i < N; i++) {
     RegexEntry re;
     ifs >> re;

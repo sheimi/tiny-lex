@@ -17,8 +17,10 @@ struct RegexEntry {
   string handler;
 
   friend inline istream& operator>>(istream& is, RegexEntry& t) {
-    is >> t.regex;
     char buffer[256];
+    is.getline(buffer, 256);
+    string buffer_tmp(buffer);
+    t.regex = buffer_tmp;
     is.getline(buffer, 256);
     while (string(buffer).substr(0, 4) != "====") {
       t.handler.append(buffer);
@@ -28,12 +30,14 @@ struct RegexEntry {
   }
 
   friend inline ostream& operator<<(ostream& os, const RegexEntry& t) {
+    os << "/*" << endl;
     os << "====" << endl;
-    os << "regex: " << t.regex << endl;
+    os << "regex: \'" << t.regex << "'"<< endl;
     os << "priority: " << t.priority << endl;
     os << "hander: " << endl;
     os << t.handler << endl;
     os << "====" << endl;
+    os << "*/" << endl;
     return os;
   }
 };

@@ -287,6 +287,8 @@ void DFA::_c_state_change(ostream& os, DFAState* state) {
   }
   cout   << "    default:" << endl;
   if (state->is_end) {
+    cout << "      fseek(shm_file, -1, SEEK_CUR);" << endl;
+    cout << "      buffer_index--;buffer[buffer_index] = '\\0';" << endl;
     _c_state_end(os, state->end_id);
     _c_state_reset(os);
   } else {
