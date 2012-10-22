@@ -43,8 +43,8 @@ NFA::~NFA() {
 
 NFA::NFA() {}
 
-NFA::NFA(string regex, int end_id) {
-  string postfix = _reg2post(regex);
+NFA::NFA(vector<int> regex, int end_id) {
+  vector<int>& postfix = _reg2post(regex);
   vector<NState*>& states = _states;
   NStateFrag sf1, sf2;
 
@@ -59,7 +59,7 @@ NFA::NFA(string regex, int end_id) {
   #define STATE_NEW(state, c, out1, out2)\
     state = new NState(states, c, out1, out2);
 
-  foreach(char c, postfix) {
+  foreach(int c, postfix) {
     switch (c) {
       default:
         STATE_NEW(state, c, NULL, NULL);
@@ -148,12 +148,12 @@ NFA* NFA::connect_NFA(vector<NFA*>& nfas) {
   return nfa;
 }
 
-string NFA::_reg2post(string& reg) {
-  stack<char> symbol_stack;
-  string reg2;
+vector<int>& NFA::_reg2post(vector<int>& reg) {
+  stack<int> symbol_stack;
+  vector<int>  reg2;
   bool add = false;
   bool first = true;
-  foreach(char c, reg) {
+  foreach(int c, reg) {
     if (add && !first
         && c != RegexEntry::RIGHT_PTH
         && c != RegexEntry::OR
@@ -180,8 +180,9 @@ string NFA::_reg2post(string& reg) {
       symbol_stack.pop();\
     }
 
-  string result;
-  foreach(char c, reg2) {
+  reg.clear();
+  vector<int>& result = reg;
+  foreach(int c, reg2) {
     switch(c) {
       default:
         result.push_back(c); 

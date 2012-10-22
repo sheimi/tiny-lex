@@ -62,7 +62,7 @@ struct DState {
 
 class NFA {
   public:
-    NFA(string reg, int end_id = 0);
+    NFA(vector<int> reg, int end_id = 0);
     virtual ~NFA();
     typedef void (* travel_func)(NState * state);
 
@@ -81,7 +81,7 @@ class NFA {
     vector<NState*> _states;
 
     void _nfa_travel(NState* state, travel_func func); 
-    string _reg2post(string& reg);
+    vector<int>& _reg2post(vector<int>& reg);
     void _set_flag(int flag);
     static NState* _connect_NFA_inner(vector<NState*>& states,
                                NState* o_state); 

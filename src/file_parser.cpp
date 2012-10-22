@@ -1,5 +1,52 @@
 #include "mylex.h"
 
+void RegexEntry::_set_regex(string& reg_str) {
+  bool escape = false;
+  foreach(char c, reg_str) {
+    if (escape) {
+      switch(c) {
+        default:
+          regex.push_back(c);
+          break;
+        case 'n':
+          regex.push_back('\n');
+          break;
+      }
+      escape = false;
+    } else {
+      switch(c) {
+        default:
+          regex.push_back(c);
+          break;
+        case '\\':
+          escape = true;
+          break;
+        case '+':
+          regex.push_back(PLUS);
+          break;
+        case '*':
+          regex.push_back(STAR);
+          break;
+        case '|':
+          regex.push_back(OR);
+          break;
+        case '.':
+          regex.push_back(CAT);
+          break;
+        case '?':
+          regex.push_back(QUEST);
+          break;
+        case '(':
+          regex.push_back(LEFT_PTH);
+          break;
+        case ')':
+          regex.push_back(RIGHT_PTH);
+          break;
+      }
+    }
+  }
+}
+
 void RegexEntry::to_c(ostream& os) {
   cout << "void end_handler_" << priority << "(char* shm_str) {" << endl;
   cout << handler << endl;

@@ -8,20 +8,24 @@ using namespace std;
 
 struct RegexEntry {
   RegexEntry(){}
-  RegexEntry(string regex, int priority, string handler):
+  RegexEntry(vector<int>& regex, int priority, string handler):
     regex(regex), priority(priority), handler(handler){}
 
   void to_c(ostream& os);
 
-  string regex;
+  vector<int> regex;
+  string regex_str;
   int priority;
   string handler;
+
+  void _set_regex(string& reg_str);
 
   friend inline istream& operator>>(istream& is, RegexEntry& t) {
     char buffer[256];
     is.getline(buffer, 256);
     string buffer_tmp(buffer);
-    t.regex = buffer_tmp;
+    t.regex_str = buffer_tmp;
+    t._set_regex(buffer_tmp);
     is.getline(buffer, 256);
     while (string(buffer).substr(0, 4) != "====") {
       t.handler.append(buffer);
@@ -33,7 +37,7 @@ struct RegexEntry {
   friend inline ostream& operator<<(ostream& os, const RegexEntry& t) {
     os << "/*" << endl;
     os << "====" << endl;
-    os << "regex: \'" << t.regex << "'"<< endl;
+    os << "regex: \'" << t.regex_str << "'"<< endl;
     os << "priority: " << t.priority << endl;
     os << "hander: " << endl;
     os << t.handler << endl;
@@ -44,13 +48,13 @@ struct RegexEntry {
 
   // regex tag such as + | . ( ) * ?
   enum RegexTag {
-    PLUS = '+',
-    STAR = '*',
-    OR = '|',
-    CAT = '.',
-    LEFT_PTH = '(',
-    RIGHT_PTH = ')',
-    QUEST = '?',
+    PLUS      = -1, // '+'
+    STAR      = -2, // '*'
+    OR        = -3, // '|'
+    CAT       = -4, // '.'
+    LEFT_PTH  = -5, // '('
+    RIGHT_PTH = -6, // ')'
+    QUEST     = -7, // '?'
   };
 
 };

@@ -281,7 +281,16 @@ void DFA::_c_state_change(ostream& os, DFAState* state) {
   cout << "  switch(shm_c) {" << endl;
   typedef map<int, int> map_t;
   foreach (map_t::value_type item, state->nexts) {
-    cout << "    case '" << (char)item.first << "':" << endl;
+    cout << "    case '";
+    switch(item.first) {
+      default:
+        cout << (char)item.first;
+        break;
+      case '\n':
+        cout << "\\n";
+        break;
+    }
+    cout << "':" << endl;
     cout << "      shm_state = " << item.second << ";" << endl;
     cout << "    break;" << endl;
   }
