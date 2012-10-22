@@ -10,6 +10,7 @@ struct RegexEntry {
   RegexEntry(){}
   RegexEntry(string regex, int priority, string handler):
     regex(regex), priority(priority), handler(handler){}
+
   void to_c(ostream& os);
 
   string regex;
@@ -40,6 +41,18 @@ struct RegexEntry {
     os << "*/" << endl;
     return os;
   }
+
+  // regex tag such as + | . ( ) * ?
+  enum RegexTag {
+    PLUS = '+',
+    STAR = '*',
+    OR = '|',
+    CAT = '.',
+    LEFT_PTH = '(',
+    RIGHT_PTH = ')',
+    QUEST = '?',
+  };
+
 };
 
 class FileParser {

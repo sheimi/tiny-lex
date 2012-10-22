@@ -65,13 +65,13 @@ NFA::NFA(string regex, int end_id) {
         STATE_NEW(state, c, NULL, NULL);
         PUSH(state, &state->out1, &state->out2);
         break;
-      case '.':
+      case RegexEntry::CAT:
         POP(sf2);
         POP(sf1);
         sf1.connect_state(sf2.start);
         PUSH(sf1.start, sf2.out1, sf2.out2);
         break;
-      case '|':
+      case RegexEntry::OR:
         POP(sf2);
         POP(sf1);
         STATE_NEW(state, NState::LAMBDA, sf1.start, sf2.start);
@@ -80,18 +80,18 @@ NFA::NFA(string regex, int end_id) {
         sf2.connect_state(state1);
         PUSH(state, &state1->out1, &state1->out2);
         break;
-      case '?':
+      case RegexEntry::QUEST:
         POP(sf1);
         STATE_NEW(state, NState::LAMBDA, sf1.start, NULL);
         PUSH(state, sf1.out1, &state->out1);
         break;
-      case '*':
+      case RegexEntry::STAR:
         POP(sf1);
         STATE_NEW(state, NState::LAMBDA, sf1.start, NULL);
         sf1.connect_state(state);
         PUSH(state, &(state->out2), NULL);
         break;
-      case '+':
+      case RegexEntry::PLUS:
         POP(sf1);
         STATE_NEW(state, NState::LAMBDA, sf1.start, NULL);
         sf1.connect_state(state);
@@ -154,24 +154,28 @@ string NFA::_reg2post(string& reg) {
   bool add = false;
   bool first = true;
   foreach(char c, reg) {
-    if (add && !first && c != ')' && c != '|'
-        && c != '*' && c != '+' && c != '?') {
-      reg2.push_back('.');
+    if (add && !first
+        && c != RegexEntry::RIGHT_PTH
+        && c != RegexEntry::OR
+        && c != RegexEntry::STAR
+        && c != RegexEntry::PLUS
+        && c != RegexEntry::QUEST) {
+      reg2.push_back(RegexEntry::CAT);
     }
     reg2.push_back(c);
     if (!add)
       add = true;
-    if (c == '|')
+    if (c == RegexEntry::OR)
       add = false;
     if (first && c)
       first = false;
-    if (c == '(')
+    if (c == RegexEntry::LEFT_PTH)
       first = true;
   }
 
   #define POP_SYMBOL()\
     if (symbol_stack.size() != 0\
-        && symbol_stack.top() != '(') {\
+        && symbol_stack.top() != RegexEntry::LEFT_PTH) {\
       result.push_back(symbol_stack.top());\
       symbol_stack.pop();\
     }
@@ -182,22 +186,22 @@ string NFA::_reg2post(string& reg) {
       default:
         result.push_back(c); 
         break;
-      case ')':
+      case RegexEntry::RIGHT_PTH:
         POP_SYMBOL();
-        while (symbol_stack.top() != '(') {
+        while (symbol_stack.top() != RegexEntry::LEFT_PTH ) {
           POP_SYMBOL();
         }
         symbol_stack.pop();
         break;
-      case '+':
-      case '*':
+      case RegexEntry::PLUS:
+      case RegexEntry::STAR:
         result.push_back(c);
         POP_SYMBOL();
         break;
-      case '|':
-      case '.':
+      case RegexEntry::OR:
+      case RegexEntry::CAT:
         POP_SYMBOL();
-      case '(':
+      case RegexEntry::LEFT_PTH:
         symbol_stack.push(c);
         break;
     }
