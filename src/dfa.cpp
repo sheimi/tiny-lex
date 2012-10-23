@@ -289,6 +289,12 @@ void DFA::_c_state_change(ostream& os, DFAState* state) {
       case '\n':
         cout << "\\n";
         break;
+      case '\r':
+        cout << "\\r";
+        break;
+      case '\t':
+        cout << "\\t";
+        break;
     }
     cout << "':    // " << item.first << endl;
     cout << "      shm_state = " << item.second << ";" << endl;
@@ -301,7 +307,9 @@ void DFA::_c_state_change(ostream& os, DFAState* state) {
     _c_state_end(os, state->end_id);
     _c_state_reset(os);
   } else {
-    cout << "      fprintf(stderr, \"Parse Error\");" << endl;
+    cout << "      fprintf(stdout, \"Parse Error : %s\\n\", buffer);" << endl;
+    cout << "      fprintf(stdout, \"Parse Error : %d\\n\", buffer[buffer_index - 1]);" << endl;
+    cout << "      fprintf(stderr, \"Parse Error\\n\");" << endl;
     cout << "      exit(1);" << endl;
     cout << "      break;" << endl;
   }

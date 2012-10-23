@@ -12,6 +12,12 @@ void RegexEntry::_set_regex(string& reg_str) {
         case 'n':
           escape_free.push_back('\n');
           break;
+        case 'r':
+          escape_free.push_back('\r');
+          break;
+        case 's':
+          escape_free.push_back(' ');
+          break;
       }
       escape = false;
     } else {
