@@ -1,12 +1,13 @@
 struct complex {
-    float real,
-    float image
+    float real;
+    float image;
 };
 
 typedef struct complex complex_t;
 
 int main(int argc, char** argv)
 {
+    int N = 10;
     complex_t cs[N];
     int i;
     for(i = 0;i < N;i++) {
