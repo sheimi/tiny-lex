@@ -6,26 +6,50 @@
 #include <iostream>
 using namespace std;
 
+/*
+* This struct contains the basic information about entry in .mylex file
+*/
 struct RegexEntry {
+  // store the int value of the regex
+  vector<int> regex;
+  // the priority of regex, that is, the position in .mylex file
+  int priority;
+  // the handler defined in .mylex file
+  string handler;
+
   RegexEntry(){}
   RegexEntry(vector<int>& regex, int priority, string handler):
     regex(regex), priority(priority), handler(handler){}
 
+  /*
+  * Convert handler in RegexEntry to C code
+  * If the priority is N, the C code will be:
+  *   void end_handler_N(char* shm_str) {
+  *     handler;
+  *   }
+  * If scanner find input match the regex string, it will call
+  * this handler automatically
+  */
   void to_c(ostream& os);
 
-  vector<int> regex;
-  string regex_str;
-  int priority;
-  string handler;
-
+  /*
+  * Set the regex of RegexEntry.
+  * It will convert regex string to an int array
+  */
   void _set_regex(string& reg_str);
+  
+  /*
+  * Parse The string in square bracket
+  */
   vector<int> _parse_bracket(vector<int>& reg);
 
+  /*
+  * Read RegexEntry from input stream
+  */
   friend inline istream& operator>>(istream& is, RegexEntry& t) {
     char buffer[256];
     is.getline(buffer, 256);
     string buffer_tmp(buffer);
-    t.regex_str = buffer_tmp;
     t._set_regex(buffer_tmp);
     is.getline(buffer, 256);
     while (string(buffer).substr(0, 4) != "====") {
@@ -35,19 +59,9 @@ struct RegexEntry {
     return is;
   }
 
-  friend inline ostream& operator<<(ostream& os, const RegexEntry& t) {
-    os << "/*" << endl;
-    os << "====" << endl;
-    os << "regex: \'" << t.regex_str << "'"<< endl;
-    os << "priority: " << t.priority << endl;
-    os << "hander: " << endl;
-    os << t.handler << endl;
-    os << "====" << endl;
-    os << "*/" << endl;
-    return os;
-  }
-
-  // regex tag such as + | . ( ) * ?
+  /*
+  * Map of Regex Operator
+  */
   enum RegexTag {
     PLUS      = -1,  // '+'
     STAR      = -2,  // '*'
@@ -63,14 +77,28 @@ struct RegexEntry {
 
 };
 
+/*
+* Parser of .mylex file and generate c Code
+*/
 class FileParser {
   public:
     FileParser(string& filename);
     virtual ~FileParser();
+    /*
+    * convert dfa to c code (to stdout)
+    */ 
+    void to_c();
+    /*
+    * couvert dfa to c code (to file "filename")
+    */
+    void to_c(string& filename);
   private:
+    // entries
     vector<RegexEntry> _entries;
+    // the min dfa
     DFA* _dfa;
-
+    // innner to c code
+    void _to_c(ostream& os);
     DFA* _construct_DFA(vector<RegexEntry>& entries);
 };
 

@@ -21,6 +21,7 @@ DFA::DFA(map<set<int>, DState*>& states) {
   typedef map<set<int>, DState*> map_t;
   map<set<int>, int> id_map;
 
+  // convert DState to DFA state
   foreach(map_t::value_type& item, states) {
     DState* dstate = item.second;
     DFAState* dfa_state;
@@ -105,8 +106,10 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
   int o_id = o_state->identifier;
   map<int, int>::iterator result = id_map.find(set_log[o_id]);
   // TODO to be verified
+  // the there is an dfa in the same equivelant set
   if (result != id_map.end()) {
     DFAState* tmp = min_states[(*result).second];
+    // if the end_id is smaller than the id in the map
     if (o_state->end_id < tmp->end_id)
       tmp->end_id = o_state->end_id;
     return (*result).second;
@@ -162,6 +165,7 @@ void DFA::_divide_by_outkey(int& set_iterator, int* set_log) {
       output_set.insert(state->end_id);
     output_set.insert(set_log[id]);
     map<set<int>, int>::iterator result = output_log.find(output_set);
+    // if there is and state in the set
     if (result != output_log.end()) {
       set_log[id] = (*result).second; 
     } else {
@@ -200,8 +204,8 @@ void DFA::_divide_by_next_inner(int& set_iterator, int* set_log,
   memcpy(set_log_old, set_log, sizeof(int) * _states.size());
 
   map<map<int, int>, int> next_log;
-  map<int, set<int> > next_log_set;
-  // divider the set                                 
+  map<int, set<int> > next_log_set; 
+  // divide the set                                 
   foreach(int item, equal_set) {
     DFAState* state = _states[item];
     typedef map<int, int> map_t;
@@ -247,88 +251,87 @@ void DFA::to_c(ostream& os) {
 }
 
 void DFA::_c_header(ostream& os) {
-  cout << "void shm_parse(FILE* shm_file) {" << endl;
-  cout << "int shm_state;" << endl;
-  cout << "int shm_i;" << endl;
-  cout << "char shm_c;" << endl;
-  cout << "char buffer[1024];" << endl;
-  cout << "char buffer_index;" << endl;
+  os << "void shm_parse(FILE* shm_file) {" << endl;
+  os << "int shm_state;" << endl;
+  os << "char shm_c;" << endl;
+  os << "char buffer[1024];" << endl;
+  os << "char buffer_index;" << endl;
   _c_state_reset(os);
-  cout << "while (EOF != (shm_c = fgetc(shm_file))) {" << endl;
-  cout << "  buffer[buffer_index] = shm_c;" << endl;
-  cout << "  buffer_index++; buffer[buffer_index]='\\0';" << endl;
-  cout << "  switch(shm_state) {" << endl;
+  os << "while (EOF != (shm_c = fgetc(shm_file))) {" << endl;
+  os << "  buffer[buffer_index] = shm_c;" << endl;
+  os << "  buffer_index++; buffer[buffer_index]='\\0';" << endl;
+  os << "  switch(shm_state) {" << endl;
 }
 
 void DFA::_c_footer(ostream& os) {
-  cout << "  }" << endl;
-  cout << "}" << endl;
-  cout << "}" << endl;
+  os << "  }" << endl;
+  os << "}" << endl;
+  os << "}" << endl;
 }
 
 void DFA::_c_state_reset(ostream& os) {
-  cout << "buffer[0] = '\\0';" << endl;
-  cout << "buffer_index = 0;" << endl;
-  cout << "shm_state = " << _first << ";" << endl;
+  os << "buffer[0] = '\\0';" << endl;
+  os << "buffer_index = 0;" << endl;
+  os << "shm_state = " << _first << ";" << endl;
 }
 
 void DFA::_c_state_end(ostream& os, int end_point) {
-  cout << "end_handler_" << end_point << "(buffer);" << endl;
+  os << "end_handler_" << end_point << "(buffer);" << endl;
 }
 
 void DFA::_c_state_change(ostream& os, DFAState* state) {
-  cout << "case " << state->identifier << ":" << endl;
-  cout << "  switch(shm_c) {" << endl;
+  os << "case " << state->identifier << ":" << endl;
+  os << "  switch(shm_c) {" << endl;
   typedef map<int, int> map_t;
   foreach (map_t::value_type item, state->nexts) {
-    cout << "    case '";
+    os << "    case '";
     switch(item.first) {
       default:
-        cout << (char)item.first;
+        os << (char)item.first;
         break;
       case '\n':
-        cout << "\\n";
+        os << "\\n";
         break;
       case '\r':
-        cout << "\\r";
+        os << "\\r";
         break;
       case '\t':
-        cout << "\\t";
+        os << "\\t";
         break;
     }
-    cout << "':    // " << item.first << endl;
-    cout << "      shm_state = " << item.second << ";" << endl;
-    cout << "    break;" << endl;
+    os << "':    // " << item.first << endl;
+    os << "      shm_state = " << item.second << ";" << endl;
+    os << "    break;" << endl;
   }
-  cout   << "    default:" << endl;
+  os   << "    default:" << endl;
   if (state->is_end) {
-    cout << "      fseek(shm_file, -1, SEEK_CUR);" << endl;
-    cout << "      buffer_index--;buffer[buffer_index] = '\\0';" << endl;
+    os << "      fseek(shm_file, -1, SEEK_CUR);" << endl;
+    os << "      buffer_index--;buffer[buffer_index] = '\\0';" << endl;
     _c_state_end(os, state->end_id);
     _c_state_reset(os);
   } else {
-    cout << "      fprintf(stdout, \"Parse Error : %s\\n\", buffer);" << endl;
-    cout << "      fprintf(stdout, \"Parse Error : %d\\n\", buffer[buffer_index - 1]);" << endl;
-    cout << "      fprintf(stderr, \"Parse Error\\n\");" << endl;
-    cout << "      exit(1);" << endl;
-    cout << "      break;" << endl;
+    os << "      fprintf(stdout, \"Parse Error : %s\\n\", buffer);" << endl;
+    os << "      fprintf(stdout, \"Parse Error : %d\\n\", buffer[buffer_index - 1]);" << endl;
+    os << "      fprintf(stderr, \"Parse Error\\n\");" << endl;
+    os << "      exit(1);" << endl;
+    os << "      break;" << endl;
   }
-    cout << "    }" << endl;
-  cout   << "  break;" << endl;
+    os << "    }" << endl;
+  os   << "  break;" << endl;
 }
 
 void DFA::c_include(ostream& os) {
-  cout << "#include <stdio.h>" << endl;
-  cout << "#include <stdlib.h>" << endl;
-  cout << "#include <string.h>" << endl;
+  os << "#include <stdio.h>" << endl;
+  os << "#include <stdlib.h>" << endl;
+  os << "#include <string.h>" << endl;
 
 }
 
 void DFA::c_main(ostream& os) {
-  cout << "int main(int argc, char** argv) {" << endl;
-  cout << "  FILE* infile; "<< endl;
-  cout << "  infile = fopen(argv[1], \"r\");" << endl;
-  cout << "  shm_parse(infile);" << endl;
-  cout << "  fclose(infile);" << endl;
-  cout << "}" << endl;
+  os << "int main(int argc, char** argv) {" << endl;
+  os << "  FILE* infile; "<< endl;
+  os << "  infile = fopen(argv[1], \"r\");" << endl;
+  os << "  shm_parse(infile);" << endl;
+  os << "  fclose(infile);" << endl;
+  os << "}" << endl;
 }

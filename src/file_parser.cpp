@@ -3,6 +3,7 @@
 void RegexEntry::_set_regex(string& reg_str) {
   bool escape = false;
   vector<int> escape_free;
+  // convert escape char and regex operator
   foreach(char c, reg_str) {
     if (escape) {
       switch(c) {
@@ -115,9 +116,9 @@ vector<int> RegexEntry::_parse_bracket(vector<int>& reg) {
 }
 
 void RegexEntry::to_c(ostream& os) {
-  cout << "void end_handler_" << priority << "(char* shm_str) {" << endl;
-  cout << handler << endl;
-  cout << "}" << endl;
+  os << "void end_handler_" << priority << "(char* shm_str) {" << endl;
+  os << handler << endl;
+  os << "}" << endl;
 }
 
 FileParser::FileParser(string& filename) {
@@ -131,17 +132,10 @@ FileParser::FileParser(string& filename) {
     RegexEntry re;
     ifs >> re;
     re.priority = i;
-    cout << re << endl;
     _entries.push_back(re);
   }
   ifs.close();
   _dfa = _construct_DFA(_entries);
-  _dfa->c_include(cout);
-  foreach (RegexEntry& entry, _entries) {
-    entry.to_c(cout);
-  }
-  _dfa->to_c(cout);
-  _dfa->c_main(cout);
 }
 
 FileParser::~FileParser() {
@@ -150,17 +144,38 @@ FileParser::~FileParser() {
 
 DFA* FileParser::_construct_DFA(vector<RegexEntry>& entries) {
   vector<NFA*> nfas;
+  // create NFA from entries
   foreach (RegexEntry& entry, entries) {
     nfas.push_back(new NFA(entry.regex, entry.priority));
   }
+  // connect nfsa to a big NFA
   NFA* nfa = NFA::connect_NFA(nfas);
   if (nfas.size() > 1) {
     foreach (NFA* n, nfas) {
       delete n;
     }
   }
+  // construct DFA
   DFA* dfa = nfa->construct_DFA();
   delete nfa;
+  // Minimize the DFA
   dfa->minimize();
   return dfa;
+}
+
+void FileParser::to_c() {
+  _to_c(cout);
+}
+void FileParser::to_c(string& filename) {
+  ofstream ofs(filename.c_str());
+  _to_c(ofs);
+  ofs.close();
+}
+void FileParser::_to_c(ostream& os) {
+  _dfa->c_include(os);
+  foreach (RegexEntry& entry, _entries) {
+    entry.to_c(os);
+  }
+  _dfa->to_c(os);
+  _dfa->c_main(os);
 }

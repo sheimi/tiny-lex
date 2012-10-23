@@ -3,3 +3,5 @@ test
 mylex
 *.o
 *.swp
+c_lex
+c_lex.c

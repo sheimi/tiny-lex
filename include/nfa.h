@@ -21,6 +21,9 @@ using namespace std;
 
 class DFA;
 
+/*
+ * State stored in NFA
+ */
 struct NState {
   NState();
   ~NState();
@@ -38,13 +41,16 @@ struct NState {
   int end_id;
 };
 
+/*
+ * Fragment of State machine
+ */
 struct NStateFrag {
-  NStateFrag();
-  NStateFrag(NState* start, NState** out1, NState** out2=NULL);
-
   NState* start;   // point to the Start
   NState** out1;   // point to the State's out addrees
   NState** out2;   // point to the State's out address
+
+  NStateFrag();
+  NStateFrag(NState* start, NState** out1, NState** out2=NULL);
 
   void connect_state(NState* state);
 };
@@ -77,8 +83,8 @@ class NFA {
     DFA* construct_DFA();
   private:
     NFA();
-    NState _start;
-    vector<NState*> _states;
+    NState _start;                // the start state of nfa
+    vector<NState*> _states;      // all the states in nfa
 
     void _nfa_travel(NState* state, travel_func func); 
     vector<int>& _reg2post(vector<int>& reg);
