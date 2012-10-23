@@ -25,7 +25,7 @@ class DFA {
 
     int match(string input);
     void minimize();
-    void print(vector<DFAState*>&);
+    void print(ostream& os, vector<DFAState*>&);
     void c_include(ostream& os);
     void c_main(ostream& os);
     void to_c(ostream& os);

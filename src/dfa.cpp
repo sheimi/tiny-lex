@@ -37,7 +37,7 @@ DFA::DFA(map<set<int>, DState*>& states) {
   }
 
 #ifdef DEBUG
-  print(_states);
+  print(cerr, _states);
 #endif
 
 }
@@ -57,21 +57,21 @@ int DFA::match(string input) {
   return _states[id]->end_id;
 }
 
-void DFA::print(vector<DFAState*>& states) {
-  cout << endl << endl << endl;
-  cout << "================= SPLIT LINE ==============" <<endl;
+void DFA::print(ostream& os, vector<DFAState*>& states) {
+  os << endl << endl << endl;
+  os << "================= SPLIT LINE ==============" <<endl;
 
   typedef map<int, int> map_t;
   foreach (DFAState* state, states) {
-    cout << state->identifier << " end?:" << state->is_end << "\t";
-    cout << state->identifier << " end_id:" << state->end_id << "\t";
-    cout << " first?:" << state->is_first<< "\t";
+    os << state->identifier << " end?:" << state->is_end << "\t";
+    os << state->identifier << " end_id:" << state->end_id << "\t";
+    os << " first?:" << state->is_first<< "\t";
     foreach (map_t::value_type item_m, state->nexts) {
-      cout << (char)item_m.first << " => " << item_m.second << "\t";
+      os << (char)item_m.first << " => " << item_m.second << "\t";
     }
-    cout << endl;
+    os << endl;
   }
-  cout << endl << endl << endl;
+  os << endl << endl << endl;
 }
 
 /* to minimize the DFA */
@@ -94,7 +94,7 @@ void DFA::minimize() {
   copy(min_states.begin(), min_states.end(), _states.begin());
  
 #ifdef DEBUG
-  print(_states);
+  print(cerr, _states);
 #endif
 
   delete[] set_log;
@@ -290,7 +290,7 @@ void DFA::_c_state_change(ostream& os, DFAState* state) {
         cout << "\\n";
         break;
     }
-    cout << "':" << endl;
+    cout << "':    // " << item.first << endl;
     cout << "      shm_state = " << item.second << ";" << endl;
     cout << "    break;" << endl;
   }

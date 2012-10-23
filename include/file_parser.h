@@ -19,6 +19,7 @@ struct RegexEntry {
   string handler;
 
   void _set_regex(string& reg_str);
+  vector<int> _parse_bracket(vector<int>& reg);
 
   friend inline istream& operator>>(istream& is, RegexEntry& t) {
     char buffer[256];
@@ -48,13 +49,16 @@ struct RegexEntry {
 
   // regex tag such as + | . ( ) * ?
   enum RegexTag {
-    PLUS      = -1, // '+'
-    STAR      = -2, // '*'
-    OR        = -3, // '|'
-    CAT       = -4, // '.'
-    LEFT_PTH  = -5, // '('
-    RIGHT_PTH = -6, // ')'
-    QUEST     = -7, // '?'
+    PLUS      = -1,  // '+'
+    STAR      = -2,  // '*'
+    OR        = -3,  // '|'
+    CAT       = -4,  // '.'
+    LEFT_PTH  = -5,  // '('
+    RIGHT_PTH = -6,  // ')'
+    QUEST     = -7,  // '?'
+    LEFT_BCT  = -8,  // '['
+    RIGHT_BCT = -9,  // ']'
+    HYPHEN    = -10, // '-'
   };
 
 };

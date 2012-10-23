@@ -209,9 +209,11 @@ vector<int>& NFA::_reg2post(vector<int>& reg) {
   }
   POP_SYMBOL();
 #ifdef DEBUG
-  cout << "================= SPLIT LINE ==============" <<endl;
-  cout << reg2 << endl;
-  cout << result << endl;
+  cerr << "================= SPLIT LINE ==============" <<endl;
+  PRINT_VECTOR_INT(cerr, reg2);
+  cerr << endl;
+  PRINT_VECTOR_INT(cerr, result);
+  cerr<< endl;
 #endif
   assert(symbol_stack.empty());
   return result;
@@ -324,27 +326,27 @@ DFA* NFA::construct_DFA() {
   }
 
 #ifdef DEBUG
-  cout << endl << endl << endl;
-  cout << "================= SPLIT LINE ==============" <<endl;
+  cerr << endl << endl << endl;
+  cerr << "================= SPLIT LINE ==============" <<endl;
   #define PRINT_SET(s)\
-    cout << "<";\
+    cerr << "<";\
     foreach(int item_s, s) {\
-      cout << item_s << ", ";\
+      cerr << item_s << ", ";\
     }\
-    cout << ">";\
+    cerr << ">";\
 
   typedef map<set<int>, DState*> map_t1;
   typedef map<int, set<int> > map_t2;
   foreach(map_t1::value_type& item1, states) {
     const set<int>& s = item1.first;
-    cout << " end?: " << item1.second->is_end << "    ";
-    cout << " end_id: " << item1.second->end_id << "    ";
+    cerr << " end?: " << item1.second->is_end << "    ";
+    cerr << " end_id: " << item1.second->end_id << "    ";
     PRINT_SET(s);
     foreach(map_t2::value_type& item2, item1.second->next_states) {
-      cout << "\t\t" << (char)item2.first << " => ";
+      cerr << "\t\t" << (char)item2.first << " => ";
       PRINT_SET(item2.second);
     }
-    cout << endl;
+    cerr << endl;
   }
 #endif
 

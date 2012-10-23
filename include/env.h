@@ -9,4 +9,13 @@
 
 #define foreach BOOST_FOREACH
 
+#define PRINT_VECTOR_INT(out, v) \
+  foreach(int i, v) {\
+    if (i > 0) {\
+      out << (char)i << " ";\
+    } else {\
+      out << i << " ";\
+    }\
+  }
+
 #endif

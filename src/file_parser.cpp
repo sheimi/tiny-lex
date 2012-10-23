@@ -2,49 +2,110 @@
 
 void RegexEntry::_set_regex(string& reg_str) {
   bool escape = false;
+  vector<int> escape_free;
   foreach(char c, reg_str) {
     if (escape) {
       switch(c) {
         default:
-          regex.push_back(c);
+          escape_free.push_back(c);
           break;
         case 'n':
-          regex.push_back('\n');
+          escape_free.push_back('\n');
           break;
       }
       escape = false;
     } else {
       switch(c) {
         default:
-          regex.push_back(c);
+          escape_free.push_back(c);
           break;
         case '\\':
           escape = true;
           break;
         case '+':
-          regex.push_back(PLUS);
+          escape_free.push_back(PLUS);
           break;
         case '*':
-          regex.push_back(STAR);
+          escape_free.push_back(STAR);
           break;
         case '|':
-          regex.push_back(OR);
+          escape_free.push_back(OR);
           break;
         case '.':
-          regex.push_back(CAT);
+          escape_free.push_back(CAT);
           break;
         case '?':
-          regex.push_back(QUEST);
+          escape_free.push_back(QUEST);
           break;
         case '(':
-          regex.push_back(LEFT_PTH);
+          escape_free.push_back(LEFT_PTH);
           break;
         case ')':
-          regex.push_back(RIGHT_PTH);
+          escape_free.push_back(RIGHT_PTH);
+          break;
+        case '[':
+          escape_free.push_back(LEFT_BCT);
+          break;
+        case ']':
+          escape_free.push_back(RIGHT_BCT);
+          break;
+        case '-':
+          escape_free.push_back(HYPHEN);
           break;
       }
     }
   }
+  regex = _parse_bracket(escape_free);
+#ifdef DEBUG
+  PRINT_VECTOR_INT(cerr, regex);
+  cerr << endl;
+#endif
+}
+
+vector<int> RegexEntry::_parse_bracket(vector<int>& reg) {
+  bool bracket = false;
+  bool hyphen = false;
+  int last_char;
+  vector<int> result;
+  foreach(int c, reg) {
+    if (bracket) {
+      switch (c) {
+        default:
+          if (hyphen) {
+            hyphen = false;
+            for (int i = last_char + 1; i != c;
+                 last_char < c ? i++ : i--) {
+              result.push_back(i);
+              result.push_back(OR);
+            }
+          } else {
+            last_char = c;
+          }
+          result.push_back(c);
+          result.push_back(OR);
+          break;
+        case HYPHEN:
+          hyphen = true;
+          break;
+        case RIGHT_BCT:
+          bracket = false;
+          result.pop_back();
+          result.push_back(RIGHT_PTH);
+          break;
+      }
+    } else {
+      switch (c) {
+        default:
+          result.push_back(c);
+          break;
+        case LEFT_BCT:
+          result.push_back(LEFT_PTH);
+          bracket = true;
+          break;
+      }
+    }
+  }
+  return result;
 }
 
 void RegexEntry::to_c(ostream& os) {
@@ -87,11 +148,13 @@ DFA* FileParser::_construct_DFA(vector<RegexEntry>& entries) {
     nfas.push_back(new NFA(entry.regex, entry.priority));
   }
   NFA* nfa = NFA::connect_NFA(nfas);
+  if (nfas.size() > 1) {
+    foreach (NFA* n, nfas) {
+      delete n;
+    }
+  }
   DFA* dfa = nfa->construct_DFA();
   delete nfa;
-  foreach (NFA* n, nfas) {
-    delete n;
-  }
   dfa->minimize();
   return dfa;
 }
