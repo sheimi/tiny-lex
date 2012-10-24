@@ -72,7 +72,7 @@ class NFA {
     virtual ~NFA();
     typedef void (* travel_func)(NState * state);
 
-    void get_lambda(NState* state, set<int>& result);
+    set<int>& get_lambda(NState* state);
     set<int>& get_lambda(set<int>& states);
     static NFA* connect_NFA(NFA* nfa1, NFA* nfa2);
     static NFA* connect_NFA(vector<NFA*>& nfas);
@@ -88,6 +88,7 @@ class NFA {
     map<int, set<int> > _lambda_cache;
     map<set<int>, set<int> > _lambda_set_cache;
 
+    set<int>& _get_lambda(NState* state, set<int>& result);
     void _nfa_travel(NState* state, travel_func func); 
     vector<int>& _reg2post(vector<int>& reg);
     void _set_flag(int flag);
