@@ -299,7 +299,6 @@ set<int>& NFA::get_lambda(set<int>& states) {
 }
 
 DFA* NFA::construct_DFA() {
-  cout << "constructing DFA" << endl;
   map<set<int>, DState*> states;
   queue<set<int>*> squeue;
   NState* start = _start.out1;
