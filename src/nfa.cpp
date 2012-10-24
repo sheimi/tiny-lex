@@ -237,12 +237,13 @@ void NFA::nfa_travel(travel_func func) {
   _nfa_travel(_start.out1, func);
 }
 
+/*j
 // this is help function for print_all()
 void print_state(NState* state) {
   cout << state->index << " " << state->c << " " << state->end_id << endl;
 
   set<int> l;
-  NFA::get_lambda(state, l);
+  FA::get_lambda(state, l);
   foreach(int item, l) {
     cout << item << " ";
   }
@@ -257,11 +258,20 @@ void print_state(NState* state) {
 void NFA::print_all() {
   nfa_travel(print_state);
 }
+*/
 
 // get the lambda closure of a state
 void NFA::get_lambda(NState* state, set<int>& result) {
   if (result.find(state->index) != result.end())
     return;
+  
+  map<int, set<int> >::iterator map_find = _lambda_cache.find(state->index);
+  if (map_find != _lambda_cache.end()) {
+    set<int>& fr = (*map_find).second; // find result value
+    result.insert(fr.begin(), fr.end());
+    return;
+  }
+
   result.insert(state->index);
   if (state->c == NState::LAMBDA) {
     if (state->out1 != NULL) {
@@ -271,25 +281,38 @@ void NFA::get_lambda(NState* state, set<int>& result) {
       get_lambda(state->out2, result);
     }
   }
+  _lambda_cache[state->index] = result;
 }
 
-void NFA::get_lambda(set<int> states, set<int>& result) {
+set<int>& NFA::get_lambda(set<int>& states) {
+  map<set<int>, set<int> >::iterator map_find = _lambda_set_cache.find(states);
+  if (map_find != _lambda_set_cache.end()) {
+    set<int>& fr = (*map_find).second; // find result value
+    return fr;
+  }
+  set<int> result;
   foreach(int item, states) {
     get_lambda(_states[item], result);
   }
+  _lambda_set_cache[states] = result;
+  return _lambda_set_cache[states];
 }
 
 DFA* NFA::construct_DFA() {
+  cout << "constructing DFA" << endl;
   map<set<int>, DState*> states;
-  queue<set<int> > squeue;
+  queue<set<int>*> squeue;
   NState* start = _start.out1;
   set<int> result;
   get_lambda(start, result);
-  squeue.push(result);
+  squeue.push(&result);
   bool first = true;
   while(!squeue.empty()) {
-    set<int> s_set =squeue.front();
+    set<int>& s_set = *squeue.front();
     squeue.pop();
+    map<set<int>, DState*>::iterator result = states.find(s_set);
+    if (result != states.end())
+      continue;
 
     DState* d_state = new DState(s_set);
     d_state->is_first = first;
@@ -317,11 +340,10 @@ DFA* NFA::construct_DFA() {
 
     typedef map<int, set<int> > map_t;
     foreach(map_t::value_type& item, next_states) {
-      set<int> tmp;
-      get_lambda(item.second, tmp);
+      set<int>& tmp = get_lambda(item.second);
       item.second = tmp;
-      if (states.find(item.second) == states.end())
-        squeue.push(item.second);
+      if (states.find(tmp) == states.end())
+        squeue.push(&tmp);
     }
   }
 
@@ -349,8 +371,6 @@ DFA* NFA::construct_DFA() {
     cerr << endl;
   }
 #endif
-
-
   DFA* dfa = new DFA(states);
 
   // free DStates may use smart_ptr in the future
