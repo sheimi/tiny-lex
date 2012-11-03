@@ -1,0 +1,5 @@
+name:  mylex
+description:  A sample application
+
+#dependencies:
+#  unittest: { sdk: unittest }
