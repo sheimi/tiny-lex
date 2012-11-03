@@ -75,7 +75,7 @@ class NFA {
           var sf2 = pop();
           var sf1 = pop();
           sf1.connect_state(sf2.start); 
-          push_simple(sf1.start, sf2);
+          push(sf1.start, sf2.outs[0], sf2.outs[1]);
           break;
         case OR:
           var sf2 = pop();
@@ -116,14 +116,6 @@ class NFA {
     assert(nseg_stack.isEmpty);
     all_states.forEach((item) {
       item.flag = 0;
-      print(item.id);
-      print(item.c);
-      item.outs.forEach((item) {
-        if (item != null) {
-          print(item.id);
-        }
-      });
-      print(' ');
     });
     print_state(state) {
       if (state.flag == 1)
@@ -131,6 +123,7 @@ class NFA {
       state.flag = 1;
       print(state.id);
       print(state.c);
+      print('');
       state.outs.forEach((item) {
         if (item != null) {
           print_state(item);
