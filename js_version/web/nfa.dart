@@ -113,7 +113,7 @@ class NFA {
     var state = new NFAState(all_states, END);
     sf.connect_state(state);
     this.start = sf.start;
-    assert(nseg_stack.isEmpty());
+    assert(nseg_stack.isEmpty);
     all_states.forEach((item) {
       item.flag = 0;
       print(item.id);
@@ -163,14 +163,14 @@ class NFA {
 
     pop_symbol() {
       if ((symbol_stack.length != 0)
-          && (symbol_stack.last() != LEFT_PTH))
+          && (symbol_stack.last != LEFT_PTH))
         sb.add(symbol_stack.removeLast());
     }
     result.forEach((item) {
       switch (item) {
         case RIGHT_PTH:
           pop_symbol();
-          while (symbol_stack.last() != LEFT_PTH) {
+          while (symbol_stack.last != LEFT_PTH) {
             sb.add(symbol_stack.removeLast());
           }
           symbol_stack.removeLast();
