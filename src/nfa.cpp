@@ -201,13 +201,21 @@ vector<int>& NFA::_reg2post(vector<int>& reg) {
         break;
       case RegexEntry::OR:
       case RegexEntry::CAT:
-        POP_SYMBOL();
+        while (!symbol_stack.empty()
+               && symbol_stack.top() != RegexEntry::LEFT_PTH
+               && symbol_stack.top() <= c) {
+          POP_SYMBOL();
+        }
+        symbol_stack.push(c);
+        break;
       case RegexEntry::LEFT_PTH:
         symbol_stack.push(c);
         break;
     }
+  } 
+  while(!symbol_stack.empty()) {
+    POP_SYMBOL();
   }
-  POP_SYMBOL();
 #ifdef DEBUG
   cerr << "================= SPLIT LINE ==============" <<endl;
   PRINT_VECTOR_INT(cerr, reg2);

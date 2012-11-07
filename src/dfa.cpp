@@ -112,6 +112,8 @@ int DFA::_construct_min_dfa(DFAState* o_state, vector<DFAState*>& min_states,
     // if the end_id is smaller than the id in the map
     if (o_state->end_id < tmp->end_id)
       tmp->end_id = o_state->end_id;
+    if (o_state->is_first)
+      tmp->is_first = true;
     return (*result).second;
   }
   int id = min_states.size();
