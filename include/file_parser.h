@@ -100,9 +100,19 @@ class FileParser {
     vector<RegexEntry> _entries;
     // the min dfa
     DFA* _dfa;
+    // declears
+    string _declear;
+
+
     // innner to c code
     void _to_c(ostream& os);
     DFA* _construct_DFA(vector<RegexEntry>& entries);
+
+    // parse
+    void _parse(istream& is);
+    void _parse_declear(istream& is);
+    void _parse_entries(istream& is);
+
 
     /* print include of c code */
     void _c_include(ostream& os);

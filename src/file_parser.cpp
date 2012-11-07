@@ -129,23 +129,49 @@ void RegexEntry::to_c(ostream& os) {
 
 FileParser::FileParser(string& filename) {
   ifstream ifs(filename.c_str());
-  char buffer[32];
-  ifs.getline(buffer, 32);
-  stringstream ss(buffer);
-  int N;
-  ss >> N;
-  for (int i = 0; i < N; i++) {
-    RegexEntry re;
-    ifs >> re;
-    re.priority = i;
-    _entries.push_back(re);
-  }
+  _parse(ifs);
   ifs.close();
   _dfa = _construct_DFA(_entries);
 }
 
 FileParser::~FileParser() {
   delete _dfa;
+}
+
+void FileParser::_parse(istream& is) {
+  //declear section
+  #define QUIT err_quit("WRONG LEX FORMAT");
+  char buffer[32];
+  is.getline(buffer, 32);
+  if (str_equal(buffer, "%{")) {
+    _parse_declear(is);
+  } else {
+    QUIT;
+  }
+  is.getline(buffer,32);
+  if (str_equal(buffer, "%%")) {
+    _parse_entries(is);
+  }
+}
+void FileParser::_parse_declear(istream& is) {
+  char buffer[128];
+  is.getline(buffer, 128);
+  while (str_nequal(buffer, "%}")) {
+    is.getline(buffer, 128);
+  }
+}
+void FileParser::_parse_entries(istream& is) {
+  char buffer[32];
+  is.getline(buffer, 32);
+  stringstream ss(buffer);
+  int N;
+  ss >> N;
+  for (int i = 0; i < N; i++) {
+    RegexEntry re;
+    is >> re;
+    re.priority = i;
+    _entries.push_back(re);
+  }
 }
 
 DFA* FileParser::_construct_DFA(vector<RegexEntry>& entries) {
@@ -219,6 +245,7 @@ void FileParser::_c_token(ostream& os) {
          "");
 
 }
+
 void FileParser::_c_main(ostream& os) {
   c_code(os,
          "int main(int argc, char** argv) {", 
