@@ -16,11 +16,14 @@ struct RegexEntry {
   int priority;
   // the handler defined in .mylex file
   string handler;
-  string type;
+  //string type;
 
   RegexEntry(){}
+  RegexEntry(string& raw);
   RegexEntry(vector<int>& regex, int priority, string handler):
     regex(regex), priority(priority), handler(handler){}
+
+
 
   /*
   * Convert handler in RegexEntry to C code
@@ -43,24 +46,6 @@ struct RegexEntry {
   * Parse The string in square bracket
   */
   vector<int> _parse_bracket(vector<int>& reg);
-
-  /*
-  * Read RegexEntry from input stream
-  */
-  friend inline istream& operator>>(istream& is, RegexEntry& t) {
-    char buffer[256];
-    is.getline(buffer, 256);
-    t.type = buffer;
-    is.getline(buffer, 256);
-    string buffer_tmp(buffer);
-    t._set_regex(buffer_tmp);
-    is.getline(buffer, 256);
-    while (string(buffer).substr(0, 4) != "====") {
-      t.handler.append(buffer);
-      is.getline(buffer, 256);
-    }
-    return is;
-  }
 
   /*
   * Map of Regex Operator
@@ -102,6 +87,7 @@ class FileParser {
     DFA* _dfa;
     // declears
     string _declear;
+    string _code;
 
 
     // innner to c code
@@ -112,6 +98,7 @@ class FileParser {
     void _parse(istream& is);
     void _parse_declear(istream& is);
     void _parse_entries(istream& is);
+    void _parse_code(istream& is);
 
 
     /* print include of c code */

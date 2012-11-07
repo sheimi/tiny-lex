@@ -1,5 +1,20 @@
 #include "mylex.h"
 
+RegexEntry::RegexEntry(string& raw) {
+  char buffer[128];
+  stringstream ss(raw);
+  string reg_str;
+  ss >> reg_str;
+  _set_regex(reg_str);
+  ss.getline(buffer, 128);
+  while(buffer[strlen(buffer) -1] != '}') {
+    handler.append(buffer);
+    handler.push_back('\n');
+    ss.getline(buffer, 128);
+  }
+  handler.append(buffer);
+}
+
 void RegexEntry::_set_regex(string& reg_str) {
   bool escape = false;
   vector<int> escape_free;
@@ -117,14 +132,14 @@ vector<int> RegexEntry::_parse_bracket(vector<int>& reg) {
 
 void RegexEntry::to_c(ostream& os) {
   char tmp1[64];
-  char tmp2[64];
-  sprintf(tmp1, "void end_handler_%d(Token* shm_token) { ", priority);
-  sprintf(tmp2, "  strcpy(shm_token->type, \"%s\");", type.c_str());
+  //char tmp2[64];
+  sprintf(tmp1, "void end_handler_%d(Token* shm_token)", priority);
+  //sprintf(tmp2, "  strcpy(shm_token->type, \"%s\");", type.c_str());
   c_code(os,
          tmp1,
-         tmp2,
+         //tmp2,
          handler.c_str(),
-         "}", "");
+         "");
 }
 
 FileParser::FileParser(string& filename) {
@@ -152,25 +167,41 @@ void FileParser::_parse(istream& is) {
   if (str_equal(buffer, "%%")) {
     _parse_entries(is);
   }
+  _parse_code(is);
 }
 void FileParser::_parse_declear(istream& is) {
   char buffer[128];
   is.getline(buffer, 128);
   while (str_nequal(buffer, "%}")) {
+    _declear.append(buffer);
+    _declear.push_back('\n');
     is.getline(buffer, 128);
   }
 }
 void FileParser::_parse_entries(istream& is) {
-  char buffer[32];
-  is.getline(buffer, 32);
-  stringstream ss(buffer);
-  int N;
-  ss >> N;
-  for (int i = 0; i < N; i++) {
-    RegexEntry re;
-    is >> re;
+  char buffer[128];
+  is.getline(buffer, 128);
+  int i = 0;
+  while (str_nequal(buffer, "%%")) {
+    string b_str(buffer);
+    while(buffer[strlen(buffer) -1] != '}') { 
+      b_str.push_back('\n');
+      is.getline(buffer, 128);
+      b_str.append(buffer);
+    }
+    RegexEntry re(b_str);
     re.priority = i;
     _entries.push_back(re);
+    is.getline(buffer, 128);
+    i++;
+  }
+}
+void FileParser::_parse_code(istream& is) {
+  char buffer[128];
+  while (!is.eof()) {
+    is.getline(buffer, 128);
+    _code.append(buffer);
+    _code.push_back('\n');
   }
 }
 
@@ -218,6 +249,7 @@ void FileParser::_c_include(ostream& os) {
         "#include <stdlib.h>",
         "#include <string.h>",
         "");
+  os << _declear << endl;
 }
 void FileParser::_c_token(ostream& os) {
   c_code(os,
@@ -247,17 +279,21 @@ void FileParser::_c_token(ostream& os) {
 }
 
 void FileParser::_c_main(ostream& os) {
-  c_code(os,
-         "int main(int argc, char** argv) {", 
-         "  FILE* infile;",
-         "  infile = fopen(argv[1], \"r\");",
-         "  shm_parse(infile);",
-         "  fclose(infile);",
-         "  Token* now1 = token_list.next;",
-         "  while (now1->next != 0) {",
-         "    printf(\"('%s', '%s')\\n\", now1->type, now1->value);",
-         "    now1 = now1->next;",
-         "  }",
-         "  FREE_TOKENS();",
-         "}", "");
+  if (_code.empty()) {
+    c_code(os,
+           "int main(int argc, char** argv) {", 
+           "  FILE* infile;",
+           "  infile = fopen(argv[1], \"r\");",
+           "  shm_parse(infile);",
+           "  fclose(infile);",
+           "  Token* now1 = token_list.next;",
+           "  while (now1->next != 0) {",
+           "    printf(\"('%s', '%s')\\n\", now1->type, now1->value);",
+           "    now1 = now1->next;",
+           "  }",
+           "  FREE_TOKENS();",
+           "}", "");
+  } else {
+    os << _code << endl;
+  }
 }

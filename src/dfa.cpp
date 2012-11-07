@@ -254,19 +254,19 @@ void DFA::to_c(ostream& os) {
 
 void DFA::_c_header(ostream& os) {
   c_code(os,
-        "void shm_parse(FILE* shm_file) {",
-        "int shm_state;",
-        "char shm_c;",
-        "char buffer[1024];",
-        "char buffer_index;",
+         "void shm_parse(FILE* shm_file) {",
+         "  int shm_state;",
+         "  char shm_c;",
+         "  char buffer[1024];",
+         "  char buffer_index;",
          "");
   _c_state_reset(os);
   c_code(os,
-        "while (EOF != (shm_c = fgetc(shm_file))) {",
-        "  buffer[buffer_index] = shm_c;",
-        "  buffer_index++; buffer[buffer_index]='\\0';",
-        "  switch(shm_state) {",
-        "");
+         "while (EOF != (shm_c = fgetc(shm_file))) {",
+         "  buffer[buffer_index] = shm_c;",
+         "  buffer_index++; buffer[buffer_index]='\\0';",
+         "  switch(shm_state) {",
+         "");
 }
 
 void DFA::_c_footer(ostream& os) {

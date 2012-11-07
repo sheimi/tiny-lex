@@ -1,89 +1,86 @@
 %{
+#include <stdlib.h>
+int i = 0;
 %}
 %%
-21
-SKIP
-\s|\t|\n|\r
-; // skip new line and blank
-=====================================================
-KEY WORD
-if|else|while|do|break|switch|for|case|struct|typedef
-; //
-=====================================================
-TYPE
-int|float|double|long|char
-; //
-=====================================================
-TYPE_MODIFIER
-(un)?signed
-; //
-=====================================================
-PREPROC_DERIV
-#(include|define|undef|ifdef|ifndef|if|endif|elif|else)
-; //
-=====================================================
-IDENTIFIER
-[a-zA-Z_][a-z0-9A-Z_]*
-; //
-=====================================================
-INTEGER
-[1-9][0-9]*|[0-9]
-; //
-=====================================================
-ARITHMETIC_OP
-\+|\-|\*|/|%
-; //
-=====================================================
-LOGICAL_OP
-==|&&|(\|\|)|!|<|>|<=|>=
-; //
-=====================================================
-BIT_OP
-^|&|~|\|
-; //
-=====================================================
-ACCESS_OP
-\->
-; //
-=====================================================
-ASSIGN_OP
-=
-; //
-=====================================================
-SEMICOLON
-;
-; //
-=====================================================
-DOT
-\.
-; //
-=====================================================
-COMMA
-,
-; //
-=====================================================
-LEFT_SQBRAC
-\[
-; //
-=====================================================
-RIGHT_SQBRAC
-\]
-; //
-=====================================================
-LEFT_PAREN
-\(
-; //
-=====================================================
-RIGHT_PAREN
-\)
-; //
-=====================================================
-BLOCK_END
+\s|\t|\r {
+  strcpy(shm_token->type, "SKIP");
 }
-; //
-=====================================================
-BLOCK_START
-{
-; //
-=====================================================
+\n {
+  i++;
+}
+if|else|while|do|break|switch|for|case|struct|typedef {
+  strcpy(shm_token->type,"KEYWORD");
+}
+int|float|double|long|char {
+  strcpy(shm_token->type, "TYPE");
+}
+(un)?signed {
+  strcpy(shm_token->type, "TYPE_MODIFIER");
+}
+#(include|define|undef|ifdef|ifndef|if|endif|elif|else) {
+  strcpy(shm_token->type,"PREPROC_DERIV");
+}
+[a-zA-Z_][a-z0-9A-Z_]* {
+  strcpy(shm_token->type, "IDENTIFIER");
+}
+[1-9][0-9]*|[0-9] {
+  strcpy(shm_token->type, "INTEGER");
+}
+\+|\-|\*|/|% {
+  strcpy(shm_token->type, "ARITHMETIC_OP");
+}
+==|&&|(\|\|)|!|<|>|<=|>= {
+  strcpy(shm_token->type, "LOGICAL_OP");
+}
+^|&|~|\| {
+  strcpy(shm_token->type, "BIT_OP");
+}
+\-> {
+  strcpy(shm_token->type, "ACCESS_OP");
+}
+= {
+  strcpy(shm_token->type, "ASSIGN_OP");
+}
+; {
+  strcpy(shm_token->type, "SEMICOLON");
+}
+\. {
+  strcpy(shm_token->type, "DOT");
+}
+, {
+  strcpy(shm_token->type, "COMMA");
+}
+\[ {
+  strcpy(shm_token->type, "LEFT_SQBRAC");
+}
+\] {
+  strcpy(shm_token->type, "RIGHT_SQBRAC");
+}
+\( {
+  strcpy(shm_token->type, "LEFT_PAREN");
+}
+\) {
+  strcpy(shm_token->type, "RIGHT_PAREN");
+}
+} {
+  strcpy(shm_token->type, "BLOCK_END");
+}
+{ {
+  strcpy(shm_token->type, "BLOCK_START");
+}
 %%
+
+int main (int argc, char ** argv) {
+  FILE* infile;
+  infile = fopen(argv[1], "r");
+  shm_parse(infile);
+  fclose(infile);
+  Token* now1 = token_list.next;
+  while (now1->next != 0) {
+    printf("('%s', '%s')\n", now1->type, now1->value);
+    now1 = now1->next;
+  }
+  printf("count line: %d\n", i++);
+  FREE_TOKENS();
+}

@@ -69,17 +69,19 @@ MyLex Syntax
 
 File Format
 ```
-[N] the number of entries
+%{
+[declear]
+%}
+%%
 [Entry]
-[Entry]
-...
+%%
+[Code]
 ```
 
 Entry Format
 
 ```
-[Regex]
-[Handler] with the param (shm_str)
-========= (at least 4 '=')
+[Regex] {
+  [Handler] with the param (shm_token)
+}
 ```
-
