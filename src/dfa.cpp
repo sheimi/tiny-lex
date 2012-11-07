@@ -285,8 +285,20 @@ void DFA::_c_state_reset(ostream& os) {
 
 void DFA::_c_state_end(ostream& os, int end_point) {
   char end[64];
-  sprintf(end, "end_handler_%d(buffer);", end_point);
-  c_code(os, end, "");
+  sprintf(end, "end_handler_%d(token);", end_point);
+  c_code(os,
+         "Token* token;",
+         "NEW_TOKEN(token);",
+         end,
+         "if (strcmp(token->type, \"\") != 0",
+         "   && strcmp(token->type, \"SKIP\") != 0) {",
+         "  strcpy(token->value, buffer);",
+         "  tail->next = token;",
+         "  tail = token;",
+         "} else {",
+         "  free(token);",
+         "}",
+         "");
 }
 
 void DFA::_c_state_change(ostream& os, DFAState* state) {

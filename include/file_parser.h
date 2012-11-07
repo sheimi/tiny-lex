@@ -16,6 +16,7 @@ struct RegexEntry {
   int priority;
   // the handler defined in .mylex file
   string handler;
+  string type;
 
   RegexEntry(){}
   RegexEntry(vector<int>& regex, int priority, string handler):
@@ -48,6 +49,8 @@ struct RegexEntry {
   */
   friend inline istream& operator>>(istream& is, RegexEntry& t) {
     char buffer[256];
+    is.getline(buffer, 256);
+    t.type = buffer;
     is.getline(buffer, 256);
     string buffer_tmp(buffer);
     t._set_regex(buffer_tmp);
