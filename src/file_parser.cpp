@@ -116,9 +116,9 @@ vector<int> RegexEntry::_parse_bracket(vector<int>& reg) {
 }
 
 void RegexEntry::to_c(ostream& os) {
-  os << "void end_handler_" << priority << "(char* shm_str) {" << endl;
-  os << handler << endl;
-  os << "}" << endl;
+  char tmp[64];
+  sprintf(tmp, "void end_handler_%d(char* shm_str) { ", priority);
+  c_code(os, tmp, handler.c_str(), "}", "");
 }
 
 FileParser::FileParser(string& filename) {
@@ -172,10 +172,29 @@ void FileParser::to_c(string& filename) {
   ofs.close();
 }
 void FileParser::_to_c(ostream& os) {
-  _dfa->c_include(os);
+  _c_include(os);
+  _c_token(os);
   foreach (RegexEntry& entry, _entries) {
     entry.to_c(os);
   }
   _dfa->to_c(os);
-  _dfa->c_main(os);
+  _c_main(os);
+}
+void FileParser::_c_include(ostream& os) {
+  c_code(os,
+    "#include <stdio.h>",
+    "#include <stdlib.h>",
+    "#include <string.h>",
+    "");
+}
+void FileParser::_c_token(ostream& os) {
+}
+void FileParser::_c_main(ostream& os) {
+  c_code(os,
+      "int main(int argc, char** argv) {", 
+      "  FILE* infile;",
+      "  infile = fopen(argv[1], \"r\");",
+      "  shm_parse(infile);",
+      "  fclose(infile);",
+      "}", "");
 }

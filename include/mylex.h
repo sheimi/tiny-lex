@@ -12,6 +12,7 @@
 #include "nfa.h"
 #include "dfa.h"
 #include "file_parser.h"
+#include "util.h"
 
 #include <string>
 #include <iostream>

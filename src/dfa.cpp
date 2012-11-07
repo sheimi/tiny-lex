@@ -251,87 +251,85 @@ void DFA::to_c(ostream& os) {
 }
 
 void DFA::_c_header(ostream& os) {
-  os << "void shm_parse(FILE* shm_file) {" << endl;
-  os << "int shm_state;" << endl;
-  os << "char shm_c;" << endl;
-  os << "char buffer[1024];" << endl;
-  os << "char buffer_index;" << endl;
+  c_code(os,
+        "void shm_parse(FILE* shm_file) {",
+        "int shm_state;",
+        "char shm_c;",
+        "char buffer[1024];",
+        "char buffer_index;",
+         "");
   _c_state_reset(os);
-  os << "while (EOF != (shm_c = fgetc(shm_file))) {" << endl;
-  os << "  buffer[buffer_index] = shm_c;" << endl;
-  os << "  buffer_index++; buffer[buffer_index]='\\0';" << endl;
-  os << "  switch(shm_state) {" << endl;
+  c_code(os,
+        "while (EOF != (shm_c = fgetc(shm_file))) {",
+        "  buffer[buffer_index] = shm_c;",
+        "  buffer_index++; buffer[buffer_index]='\\0';",
+        "  switch(shm_state) {",
+        "");
 }
 
 void DFA::_c_footer(ostream& os) {
-  os << "  }" << endl;
-  os << "}" << endl;
-  os << "}" << endl;
+  c_code(os, "  }", "}", "}", "");
 }
 
 void DFA::_c_state_reset(ostream& os) {
-  os << "buffer[0] = '\\0';" << endl;
-  os << "buffer_index = 0;" << endl;
-  os << "shm_state = " << _first << ";" << endl;
+  char tmp[32];
+  sprintf(tmp, "shm_state = %d;", _first);
+  c_code(os,
+        "buffer[0] = '\\0';",
+        "buffer_index = 0;",
+         tmp,
+         "");
 }
 
 void DFA::_c_state_end(ostream& os, int end_point) {
-  os << "end_handler_" << end_point << "(buffer);" << endl;
+  char end[64];
+  sprintf(end, "end_handler_%d(buffer);", end_point);
+  c_code(os, end, "");
 }
 
 void DFA::_c_state_change(ostream& os, DFAState* state) {
-  os << "case " << state->identifier << ":" << endl;
-  os << "  switch(shm_c) {" << endl;
+  char bf1[80], bf2[80];
+  sprintf(bf1, "case %d:", state->identifier);
+  c_code(os, bf1, "  switch(shm_c) {", "");
   typedef map<int, int> map_t;
   foreach (map_t::value_type item, state->nexts) {
-    os << "    case '";
+    char case_state[4];
     switch(item.first) {
       default:
-        os << (char)item.first;
+        case_state[0] = (char)item.first;
+        case_state[1] = '\0';
         break;
       case '\n':
-        os << "\\n";
+        strcpy(case_state, "\\n");
         break;
       case '\r':
-        os << "\\r";
+        strcpy(case_state, "\\r");
         break;
       case '\t':
-        os << "\\t";
+        strcpy(case_state, "\\t");
         break;
     }
-    os << "':    // " << item.first << endl;
-    os << "      shm_state = " << item.second << ";" << endl;
-    os << "    break;" << endl;
+    sprintf(bf1, "    case '%s':", case_state);
+    sprintf(bf2, "      shm_state = %d;", item.second);
+    c_code(os, bf1, bf2, "break;", "");
   }
   os   << "    default:" << endl;
   if (state->is_end) {
-    os << "      fseek(shm_file, -1, SEEK_CUR);" << endl;
-    os << "      buffer_index--;buffer[buffer_index] = '\\0';" << endl;
+    c_code(os,
+           "      fseek(shm_file, -1, SEEK_CUR);",
+           "      buffer_index--;",
+           "      buffer[buffer_index] = '\\0';",
+           "");
     _c_state_end(os, state->end_id);
     _c_state_reset(os);
   } else {
-    os << "      fprintf(stdout, \"Parse Error : %s\\n\", buffer);" << endl;
-    os << "      fprintf(stdout, \"Parse Error : %d\\n\", buffer[buffer_index - 1]);" << endl;
-    os << "      fprintf(stderr, \"Parse Error\\n\");" << endl;
-    os << "      exit(1);" << endl;
-    os << "      break;" << endl;
+    c_code(os,
+          "      fprintf(stdout, \"Parse Error : %s\\n\", buffer);",
+          "      fprintf(stdout, \"Parse Error : %d\\n\", buffer[buffer_index - 1]);",
+          "      fprintf(stderr, \"Parse Error\\n\");",
+          "      exit(1);", 
+          "      break;",
+          "");
   }
-    os << "    }" << endl;
-  os   << "  break;" << endl;
-}
-
-void DFA::c_include(ostream& os) {
-  os << "#include <stdio.h>" << endl;
-  os << "#include <stdlib.h>" << endl;
-  os << "#include <string.h>" << endl;
-
-}
-
-void DFA::c_main(ostream& os) {
-  os << "int main(int argc, char** argv) {" << endl;
-  os << "  FILE* infile; "<< endl;
-  os << "  infile = fopen(argv[1], \"r\");" << endl;
-  os << "  shm_parse(infile);" << endl;
-  os << "  fclose(infile);" << endl;
-  os << "}" << endl;
+  c_code(os, "    }", "  break;", "");
 }

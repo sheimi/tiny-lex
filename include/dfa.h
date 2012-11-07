@@ -40,10 +40,6 @@ class DFA {
      * minimize the dfa
      */
     void minimize();
-    /* print include of c code */
-    void c_include(ostream& os);
-    /* print main function of c code */
-    void c_main(ostream& os);
     /* convert DFA to c code */
     void to_c(ostream& os);
     void print(ostream& os, vector<DFAState*>&);

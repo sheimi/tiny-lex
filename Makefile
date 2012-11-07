@@ -3,9 +3,9 @@ LIB_DIR=lib
 INC_DIR=include
 SRC_DIR=src
 CFLAGS=-I$(INC_DIR) -Wall -c
-TARGET=$(LIB_DIR)/error.o \
+TARGET=$(LIB_DIR)/error.o $(LIB_DIR)/util.o\
 			 $(SRC_DIR)/mylex.o $(SRC_DIR)/nfa.o $(SRC_DIR)/dfa.o $(SRC_DIR)/file_parser.o
-TARGET_OBJ=error.o \
+TARGET_OBJ=error.o util.o\
 					 mylex.o nfa.o dfa.o file_parser.o
 
 ifneq ($(DEBUG),)
@@ -33,6 +33,9 @@ file_parser.o:$(SRC_DIR)/file_parser.cpp
 
 error.o:$(LIB_DIR)/error.cpp
 	c++ $< -o $(LIB_DIR)/error.o $(CFLAGS) 
+
+util.o:$(LIB_DIR)/util.cpp
+	c++ $< -o $(LIB_DIR)/util.o $(CFLAGS) 
 
 clean:
 	rm -rf $(LIB_DIR)/*.o

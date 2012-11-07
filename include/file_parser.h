@@ -100,6 +100,14 @@ class FileParser {
     // innner to c code
     void _to_c(ostream& os);
     DFA* _construct_DFA(vector<RegexEntry>& entries);
+
+    /* print include of c code */
+    void _c_include(ostream& os);
+    /* print main function of c code */
+    void _c_main(ostream& os);
+    /* print struct of token of c code */
+    void _c_token(ostream& os);
+    
 };
 
 #endif
