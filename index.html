@@ -117,17 +117,47 @@ make c_lex
 </li>
 </ul><p>File Format</p>
 
-<pre><code>[N] the number of entries
+<pre><code>%{
+[declear]
+%}
+%%
 [Entry]
-[Entry]
-...
+%%
+[Code]
 </code></pre>
 
 <p>Entry Format</p>
 
-<pre><code>[Regex]
-[Handler] with the param (shm_str)
-========= (at least 4 '=')
+<pre><code>[Regex] {
+  [Handler] with the param (shm_token)
+}
+</code></pre>
+
+<p>And there are some constrains:</p>
+
+<ul>
+<li>you must provide a main function in 'Code' section</li>
+<li>in 'main', you must invoke myylex(char* filename, void (*func)())</li>
+<li>you must pass a function pointer when you invoke myylex</li>
+<li>in myylex, you can use the 'Token List'</li>
+</ul><pre><code>// To travel the token list
+// You should define trav_func
+void iter_list(void (*trav_func)(Token*));
+
+// print a specific token (a pre-defined trav_func)
+void print_token(Token* token);
+
+// invoke in 'main'
+void myylex(char* input, void (*func)());
+
+// init a iter
+#define INIT_ITER(iter) 
+// get next token
+#define ITER_NEXT(iter)  (iter = iter-&gt;next)
+// if there is a next token
+#define ITER_HASNEXT(iter) (iter != NULL &amp;&amp; iter-&gt;next != NULL)
+// if the iter is NULL
+#define ITER_ISEND(iter) (iter == NULL)
 </code></pre>
       </section>
 
