@@ -7,6 +7,7 @@ int i = 0;
   strcpy(shm_token->type, "SKIP");
 }
 \n {
+  strcpy(shm_token->type, "SKIP");
   i++;
 }
 if|else|while|do|break|switch|for|case|struct|typedef {
@@ -76,10 +77,10 @@ int main (int argc, char ** argv) {
   infile = fopen(argv[1], "r");
   shm_parse(infile);
   fclose(infile);
-  Token* now1 = token_list.next;
-  while (now1->next != 0) {
-    printf("('%s', '%s')\n", now1->type, now1->value);
-    now1 = now1->next;
+  Token* now = token_list.next;
+  while (now->next != 0) {
+    printf("('%s', '%s')\n", now->type, now->value);
+    now = now->next;
   }
   printf("count line: %d\n", i++);
   FREE_TOKENS();
