@@ -85,3 +85,30 @@ Entry Format
   [Handler] with the param (shm_token)
 }
 ```
+
+And there are some constrains:
+* you must provide a main function in 'Code' section
+* in 'main', you must invoke myylex(char* filename, void (*func)())
+* you must pass a function pointer when you invoke myylex
+* in myylex, you can use the 'Token List'
+
+```
+// To travel the token list
+// You should define trav_func
+void iter_list(void (*trav_func)(Token*));
+
+// print a specific token (a pre-defined trav_func)
+void print_token(Token* token);
+
+// invoke in 'main'
+void myylex(char* input, void (*func)());
+
+// init a iter
+#define INIT_ITER(iter) 
+// get next token
+#define ITER_NEXT(iter)  (iter = iter->next)
+// if there is a next token
+#define ITER_HASNEXT(iter) (iter != NULL && iter->next != NULL)
+// if the iter is NULL
+#define ITER_ISEND(iter) (iter == NULL)
+```

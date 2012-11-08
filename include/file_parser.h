@@ -107,6 +107,8 @@ class FileParser {
     void _c_main(ostream& os);
     /* print struct of token of c code */
     void _c_token(ostream& os);
+    /* print help function*/
+    void _c_helper(ostream& os);
     
 };
 

@@ -241,6 +241,7 @@ void FileParser::_to_c(ostream& os) {
     entry.to_c(os);
   }
   _dfa->to_c(os);
+  _c_helper(os);
   _c_main(os);
 }
 void FileParser::_c_include(ostream& os) {
@@ -265,35 +266,47 @@ void FileParser::_c_token(ostream& os) {
          "  t->next = 0;\\",
          "  strcpy(t->type, \"\");\\",
          "  strcpy(t->value, \"\");",
-         "#define FREE_TOKENS() \\",
-         "  Token* _free_now = token_list.next;\\",
-         "  Token* _free_tmp = _free_now;\\",
-         "  while (_free_now->next != 0) {\\",
-         "    _free_tmp = _free_now;\\",
-         "    _free_now = _free_now->next;\\",
-         "    free(_free_tmp);\\",
-         "  }\\",
-         "  free(_free_now);",
+         "#define INIT_ITER(iter) \\",
+         "  iter = token_list.next;",
+         "#define ITER_NEXT(iter) (iter = iter->next)",
+         "#define ITER_HASNEXT(iter) (iter != NULL && iter->next != NULL)",
+         "#define ITER_ISEND(iter) (iter == NULL)",
          "");
 
 }
 
 void FileParser::_c_main(ostream& os) {
-  if (_code.empty()) {
-    c_code(os,
-           "int main(int argc, char** argv) {", 
-           "  FILE* infile;",
-           "  infile = fopen(argv[1], \"r\");",
-           "  shm_parse(infile);",
-           "  fclose(infile);",
-           "  Token* now = token_list.next;",
-           "  while (now->next != 0) {",
-           "    printf(\"('%s', '%s')\\n\", now->type, now->value);",
-           "    now = now->next;",
-           "  }",
-           "  FREE_TOKENS();",
-           "}", "");
-  } else {
-    os << _code << endl;
-  }
+  os << _code << endl;
+}
+void FileParser::_c_helper(ostream& os) {
+  c_code(os,
+         "void print_token(Token* token) {",
+         "  printf(\"('%s', '%s')\\n\", token->type, token->value);",
+         "}",
+         "void free_tokens() {",
+         "  Token* iter;",
+         "  INIT_ITER(iter);",
+         "  while(!ITER_ISEND(iter)) {",
+         "    Token* tmp = iter;",
+         "    ITER_NEXT(iter);",
+         "    free(tmp);",
+         "  }",
+         "}",
+         "void myylex(char* input, void (*func)()) {",
+         "  FILE* infile;",
+         "  infile = fopen(input, \"r\");",
+         "  shm_parse(infile);",
+         "  fclose(infile);",
+         "  func();",
+         "  free_tokens();",
+         "}",
+         "void iter_list(void (*trav_func)(Token*)) {",
+         "  Token* iter;",
+         "  INIT_ITER(iter);",
+         "  while (!ITER_ISEND(iter)) {",
+         "    trav_func(iter);",
+         "    ITER_NEXT(iter);",
+         "  }",
+         "}",
+         "");
 }
