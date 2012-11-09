@@ -10,3 +10,9 @@ void c_code(ostream& os, ...) {
   }
   va_end(ap);
 }
+
+void fgetline(istream& is, char* buffer, int size) {
+  do {
+    is.getline(buffer, size);
+  } while (str_equal(buffer, "") && !is.eof());
+}

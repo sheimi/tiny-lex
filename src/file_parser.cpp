@@ -1,16 +1,16 @@
 #include "mylex.h"
 
 RegexEntry::RegexEntry(string& raw) {
-  char buffer[128];
+  char buffer[BUFFER_SIZE];
   stringstream ss(raw);
   string reg_str;
   ss >> reg_str;
   _set_regex(reg_str);
-  ss.getline(buffer, 128);
+  ss.getline(buffer, BUFFER_SIZE);
   while(buffer[strlen(buffer) -1] != '}') {
     handler.append(buffer);
     handler.push_back('\n');
-    ss.getline(buffer, 128);
+    ss.getline(buffer, BUFFER_SIZE);
   }
   handler.append(buffer);
 }
@@ -131,8 +131,8 @@ vector<int> RegexEntry::_parse_bracket(vector<int>& reg) {
 }
 
 void RegexEntry::to_c(ostream& os) {
-  char tmp1[64];
-  //char tmp2[64];
+  char tmp1[BUFFER_SIZE];
+  //char tmp2[BUFFER_SIZE];
   sprintf(tmp1, "void end_handler_%d(Token* shm_token)", priority);
   //sprintf(tmp2, "  strcpy(shm_token->type, \"%s\");", type.c_str());
   c_code(os,
@@ -156,50 +156,50 @@ FileParser::~FileParser() {
 void FileParser::_parse(istream& is) {
   //declear section
   #define QUIT err_quit("WRONG LEX FORMAT");
-  char buffer[32];
-  is.getline(buffer, 32);
+  char buffer[BUFFER_SIZE_SMALL];
+  fgetline(is, buffer, BUFFER_SIZE_SMALL);
   if (str_equal(buffer, "%{")) {
     _parse_declear(is);
   } else {
     QUIT;
   }
-  is.getline(buffer,32);
+  fgetline(is, buffer, BUFFER_SIZE_SMALL);
   if (str_equal(buffer, "%%")) {
     _parse_entries(is);
   }
   _parse_code(is);
 }
 void FileParser::_parse_declear(istream& is) {
-  char buffer[128];
-  is.getline(buffer, 128);
+  char buffer[BUFFER_SIZE];
+  fgetline(is, buffer, BUFFER_SIZE);
   while (str_nequal(buffer, "%}")) {
     _declear.append(buffer);
     _declear.push_back('\n');
-    is.getline(buffer, 128);
+    fgetline(is, buffer, BUFFER_SIZE);
   }
 }
 void FileParser::_parse_entries(istream& is) {
-  char buffer[128];
-  is.getline(buffer, 128);
+  char buffer[BUFFER_SIZE];
+  fgetline(is, buffer, BUFFER_SIZE);
   int i = 0;
   while (str_nequal(buffer, "%%")) {
     string b_str(buffer);
     while(buffer[strlen(buffer) -1] != '}') { 
       b_str.push_back('\n');
-      is.getline(buffer, 128);
+      fgetline(is, buffer, BUFFER_SIZE);
       b_str.append(buffer);
     }
     RegexEntry re(b_str);
     re.priority = i;
     _entries.push_back(re);
-    is.getline(buffer, 128);
+    fgetline(is, buffer, BUFFER_SIZE);
     i++;
   }
 }
 void FileParser::_parse_code(istream& is) {
-  char buffer[128];
+  char buffer[BUFFER_SIZE];
   while (!is.eof()) {
-    is.getline(buffer, 128);
+    fgetline(is, buffer, BUFFER_SIZE);
     _code.append(buffer);
     _code.push_back('\n');
   }

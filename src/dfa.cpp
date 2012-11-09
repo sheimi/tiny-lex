@@ -274,7 +274,7 @@ void DFA::_c_footer(ostream& os) {
 }
 
 void DFA::_c_state_reset(ostream& os) {
-  char tmp[32];
+  char tmp[BUFFER_SIZE_SMALL];
   sprintf(tmp, "shm_state = %d;", _first);
   c_code(os,
         "buffer[0] = '\\0';",
@@ -284,7 +284,7 @@ void DFA::_c_state_reset(ostream& os) {
 }
 
 void DFA::_c_state_end(ostream& os, int end_point) {
-  char end[64];
+  char end[BUFFER_SIZE_SMALL];
   sprintf(end, "end_handler_%d(token);", end_point);
   c_code(os,
          "Token* token;",
@@ -302,7 +302,7 @@ void DFA::_c_state_end(ostream& os, int end_point) {
 }
 
 void DFA::_c_state_change(ostream& os, DFAState* state) {
-  char bf1[80], bf2[80];
+  char bf1[BUFFER_SIZE], bf2[BUFFER_SIZE];
   sprintf(bf1, "case %d:", state->identifier);
   c_code(os, bf1, "  switch(shm_c) {", "");
   typedef map<int, int> map_t;

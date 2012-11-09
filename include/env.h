@@ -18,4 +18,9 @@
     }\
   }
 
+const int BUFFER_SIZE = 128;
+const int BUFFER_SIZE_SMALL = 64;
+const int BUFFER_SIZE_SMALLER = 32;
+
+
 #endif
